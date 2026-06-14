@@ -97,6 +97,11 @@ export class BotService {
         );
         return;
       }
+      const limitCheck = await tigService.checkDailyResetLimit(binding.userId);
+      if (!limitCheck.ok) {
+        await ctx.reply("❌ لقد تجاوزت الحد اليومي لاستعادة كلمة المرور (3 مرات في اليوم).\nالرجاء المحاولة غداً.");
+        return;
+      }
       const sessionId = `${tgId}`;
       const otp = String(crypto.randomInt(100000, 1000000));
       const salt = crypto.randomBytes(16).toString("hex");
@@ -104,15 +109,25 @@ export class BotService {
       const key = `tig:bot:otp:${sessionId}`;
       await redis.set(key, JSON.stringify({ codeHash, salt, userId: binding.userId, attempts: 0 }), { ex: OTP_TTL });
       await redis.set(`${this.SESSION_PREFIX}${sessionId}`, JSON.stringify({ step: "awaiting_otp", userId: binding.userId, otpKey: key }), { ex: OTP_TTL });
-      await ctx.reply("🔐 تم إرسال رمز التحقق.\n\nالرجاء إدخال الرمز المكون من 6 أرقام.\n(⏳ الرمز صالح لمدة 5 دقائق)\n\n❌ للإلغاء، اضغط على الزر أدناه.");
+      const infoMsg = await ctx.reply("🔐 تم إرسال رمز التحقق.\n\nالرجاء إدخال الرمز المكون من 6 أرقام.\n(⏳ الرمز صالح لمدة 5 دقائق)\n\n❌ للإلغاء، اضغط على الزر أدناه.");
       try {
-        await ctx.reply(`🔢 رمز التحقق الخاص بك: ${otp}`, { reply_markup: new InlineKeyboard().text("❌ إلغاء", "cancel_reset") });
+        const otpMsg = await ctx.reply(`🔢 رمز التحقق الخاص بك: ${otp}`, { reply_markup: new InlineKeyboard().text("❌ إلغاء", "cancel_reset") });
+        await redis.set(`tig:bot:msgs:${sessionId}`, JSON.stringify({ infoMsgId: infoMsg?.message_id, otpMsgId: otpMsg?.message_id }), { ex: OTP_TTL });
       } catch { }
     });
 
     this._bot.callbackQuery("cancel_reset", async (ctx) => {
       await ctx.answerCallbackQuery();
-      if (ctx.from?.id) await redis.del(`${this.SESSION_PREFIX}${ctx.from.id}`);
+      const tgId = ctx.from?.id;
+      if (tgId) {
+        await redis.del(`${this.SESSION_PREFIX}${tgId}`);
+        const msgsRaw = await redis.getdel(`tig:bot:msgs:${tgId}`);
+        if (msgsRaw) {
+          const { infoMsgId, otpMsgId } = JSON.parse(msgsRaw);
+          try { if (infoMsgId) await ctx.api.deleteMessage(ctx.chat!.id, infoMsgId); } catch {}
+          try { if (otpMsgId) await ctx.api.deleteMessage(ctx.chat!.id, otpMsgId); } catch {}
+        }
+      }
       await ctx.reply("❌ تم إلغاء عملية استعادة كلمة المرور.");
     });
 
@@ -262,6 +277,12 @@ export class BotService {
           await ctx.reply(`❌ رمز غير صحيح. المحاولات المتبقية: ${5 - data.attempts}`);
           return;
         }
+        const msgsRaw = await redis.getdel(`tig:bot:msgs:${tgId}`);
+        if (msgsRaw) {
+          const { infoMsgId, otpMsgId } = JSON.parse(msgsRaw);
+          try { if (infoMsgId) await ctx.api.deleteMessage(ctx.chat!.id, infoMsgId); } catch {}
+          try { if (otpMsgId) await ctx.api.deleteMessage(ctx.chat!.id, otpMsgId); } catch {}
+        }
         session.step = "awaiting_password";
         await redis.set(`${this.SESSION_PREFIX}${tgId}`, JSON.stringify(session), { ex: OTP_TTL * 2 });
         pendingResetInputs.add(tgId);
@@ -282,7 +303,7 @@ export class BotService {
             data: { passwordHash, failedLoginAttempts: 0, status: "ACTIVE", lockedUntil: null, tokenVersion: { increment: 1 } },
           });
           await revokeAllSessions(session.userId);
-          await prisma.auditLog.create({ data: { userId: session.userId, action: "UPDATE", severity: "WARNING", description: "تم تغيير كلمة المرور عبر Telegram Bot" } });
+          await prisma.auditLog.create({ data: { userId: session.userId, action: "PASSWORD_RESET_COMPLETED", severity: "WARNING", description: "تم تغيير كلمة المرور عبر Telegram Bot" } });
           const resetUser = await prisma.user.findUnique({ where: { id: session.userId }, select: { name: true, email: true, role: true, level: true } });
           if (resetUser) {
             void this._notifyAdmin("PASSWORD_RESET_COMPLETED", {
@@ -320,6 +341,8 @@ export class BotService {
   // ==================== TIG Code Handler ====================
 
   private async _handleTigCode(ctx: any, code: string) {
+    try { await ctx.deleteMessage(); } catch { }
+
     const from = ctx.from;
     if (!from) {
       logger.warn("[BotService] _handleTigCode called without user identity");
