@@ -14,6 +14,7 @@ const OTP_TTL = 300;
 export class BotService {
   private _bot: Bot;
   private _initialized = false;
+  private _initPromise: Promise<void> | null = null;
   private readonly SESSION_PREFIX = "tig:bot:session:";
 
   constructor() {
@@ -30,8 +31,13 @@ export class BotService {
 
   async init(): Promise<void> {
     if (this._initialized) return;
-    this._initialized = true;
+    if (this._initPromise) return this._initPromise;
 
+    this._initPromise = this._doInit();
+    return this._initPromise;
+  }
+
+  private async _doInit(): Promise<void> {
     if (typeof globalThis !== "undefined" && !("__bot_polling_started" in globalThis)) {
       (globalThis as any).__bot_polling_started = false;
     }
@@ -330,6 +336,9 @@ export class BotService {
     this._bot.catch((err) => {
       logger.error("[BotService] Unhandled bot error:", { error: String(err.error) });
     });
+
+    this._initialized = true;
+    this._initPromise = null;
 
     if (process.env.TIG_BOT_POLLING === "true" && !(globalThis as any).__bot_polling_started) {
       (globalThis as any).__bot_polling_started = true;
