@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import redis from "@/lib/redis";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const results: Record<string, any> = {};
 
   try {
@@ -28,6 +28,12 @@ export async function GET() {
     redisUrlPrefix: process.env.UPSTASH_REDIS_REST_URL?.substring(0, 20),
     appUrl: process.env.NEXT_PUBLIC_APP_URL,
   };
+
+  const code = request.nextUrl.searchParams.get("code");
+  if (code) {
+    const bindRaw = await redis.get<string>(`tig:bind:${code}`);
+    results.checkCode = { code, found: !!bindRaw, value: bindRaw ? JSON.parse(bindRaw) : null };
+  }
 
   return NextResponse.json(results);
 }
