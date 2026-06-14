@@ -78,7 +78,7 @@ function doc() {
                     spacer(600),
                     h1("فهرس المحتويات"),
                     spacer(200),
-                    new TableOfContents("فهرس المحتويات", { rightAligned: true }),
+                    new TableOfContents("فهرس المحتويات"),
                 ],
             },
 
