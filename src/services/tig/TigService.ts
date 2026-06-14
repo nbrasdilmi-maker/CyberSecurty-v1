@@ -25,7 +25,8 @@ export class TigService {
     const count = await prisma.auditLog.count({
       where: {
         userId,
-        action: "PASSWORD_RESET_COMPLETED",
+        action: "UPDATE",
+        description: "تم تغيير كلمة المرور عبر Telegram Bot",
         createdAt: { gte: today },
       },
     });

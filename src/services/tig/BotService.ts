@@ -303,7 +303,7 @@ export class BotService {
             data: { passwordHash, failedLoginAttempts: 0, status: "ACTIVE", lockedUntil: null, tokenVersion: { increment: 1 } },
           });
           await revokeAllSessions(session.userId);
-          await prisma.auditLog.create({ data: { userId: session.userId, action: "PASSWORD_RESET_COMPLETED", severity: "WARNING", description: "تم تغيير كلمة المرور عبر Telegram Bot" } });
+          await prisma.auditLog.create({ data: { userId: session.userId, action: "UPDATE", severity: "WARNING", description: "تم تغيير كلمة المرور عبر Telegram Bot" } });
           const resetUser = await prisma.user.findUnique({ where: { id: session.userId }, select: { name: true, email: true, role: true, level: true } });
           if (resetUser) {
             void this._notifyAdmin("PASSWORD_RESET_COMPLETED", {
