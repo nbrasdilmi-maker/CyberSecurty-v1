@@ -46,3 +46,5 @@ TIG_PHASE5_FILE_MAP.txt
 next-env.d.ts
 
 /src/generated/prisma
+
+.vercel

@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  botService.init();
+  await botService.init();
 
   try {
     const update = await request.json();

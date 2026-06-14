@@ -28,12 +28,18 @@ export class BotService {
     return this._bot;
   }
 
-  init(): void {
+  async init(): Promise<void> {
     if (this._initialized) return;
     this._initialized = true;
 
     if (typeof globalThis !== "undefined" && !("__bot_polling_started" in globalThis)) {
       (globalThis as any).__bot_polling_started = false;
+    }
+
+    try {
+      await this._bot.init();
+    } catch (e) {
+      logger.error("[BotService] Bot init failed", { error: String(e) });
     }
 
     this._bot.command("start", async (ctx) => {
@@ -307,7 +313,7 @@ export class BotService {
     if (process.env.TIG_BOT_POLLING === "true" && !(globalThis as any).__bot_polling_started) {
       (globalThis as any).__bot_polling_started = true;
       logger.info("[BotService] Starting in polling mode...");
-      this._bot.start({ drop_pending_updates: true });
+      await this._bot.start({ drop_pending_updates: true });
     }
   }
 
@@ -397,5 +403,5 @@ export const botService = new BotService();
 
 // Auto-init on server load (handles both polling and webhook modes)
 if (typeof process !== "undefined" && process.env.NODE_ENV) {
-  botService.init();
+  botService.init().catch((e) => logger.error("[BotService] Auto-init failed", { error: String(e) }));
 }
