@@ -248,8 +248,6 @@ export class BotService {
       const tgId = `${ctx.from?.id}`;
       const text = ctx.message?.text?.trim() || "";
       const upperText = text.toUpperCase();
-      logger.info("[BotService] message:text handler", { tgId, rawText: ctx.message?.text, trimmedText: text, upperText, matches: /^TIG-[A-Z0-9]{4,}$/i.test(upperText) });
-
       // ---- 1. TIG binding/recovery codes ----
       if (/^TIG-[A-Z0-9]{4,}$/i.test(upperText)) {
         await this._handleTigCode(ctx, upperText);
@@ -361,23 +359,17 @@ export class BotService {
     }
 
     const telegramId = BigInt(from.id);
-    logger.info("[BotService] _handleTigCode called", { code, tgId: String(telegramId) });
-
     // 1. Extract userId from either recovery session or direct bind
     const recoverySession = await tigService.getRecoverySession(code);
     let codeUserId: string | null = null;
     if (recoverySession) {
       codeUserId = recoverySession.userId;
-      logger.info("[BotService] Found recovery session", { code, userId: codeUserId });
     } else {
-      const bindKey = `tig:bind:${code}`;
-      const bindRaw = await redis.get<string>(bindKey);
-      logger.info("[BotService] Redis lookup for bind code", { bindKey, found: !!bindRaw });
+      const bindRaw = await redis.get<string>(`tig:bind:${code}`);
       if (bindRaw) codeUserId = JSON.parse(bindRaw).userId;
     }
 
     if (!codeUserId) {
-      logger.warn("[BotService] Code not found in Redis", { code });
       await ctx.reply("❌ كود الربط غير صالح أو منتهي الصلاحية. يرجى إنشاء كود جديد من الموقع.");
       return;
     }

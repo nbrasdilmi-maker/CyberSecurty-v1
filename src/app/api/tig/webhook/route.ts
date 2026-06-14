@@ -13,9 +13,6 @@ export async function POST(request: NextRequest) {
   let update: any;
   try {
     update = await request.json();
-    if (update?.message?.text) {
-      console.log("[TigWebhook] received text:", JSON.stringify(update.message.text));
-    }
   } catch (parseError) {
     console.error("[TigWebhook] Error parsing update:", parseError);
     return NextResponse.json({ ok: true });
