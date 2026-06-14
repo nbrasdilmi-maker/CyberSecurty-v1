@@ -283,8 +283,7 @@ export class BotService {
           try { if (infoMsgId) await ctx.api.deleteMessage(ctx.chat!.id, infoMsgId); } catch {}
           try { if (otpMsgId) await ctx.api.deleteMessage(ctx.chat!.id, otpMsgId); } catch {}
         }
-      }
-      session.step = "awaiting_password";
+        session.step = "awaiting_password";
         await redis.set(`${this.SESSION_PREFIX}${tgId}`, JSON.stringify(session), { ex: OTP_TTL * 2 });
         pendingResetInputs.add(tgId);
         await ctx.reply("✅ تم التحقق من الرمز.\n\nالرجاء إرسال كلمة المرور الجديدة:\n• يجب أن تكون 8 أحرف على الأقل\n• يُفضل احتواؤها على أرقام وحروف");
