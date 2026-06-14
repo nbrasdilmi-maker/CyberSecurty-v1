@@ -479,6 +479,23 @@ model SystemConfig {
   @@map("system_configs")
 }
 
+model PageControl {
+  id                 String    @id @default(uuid())
+  pageKey            String    @unique
+  pageName           String
+  route              String
+  isDisabled         Boolean   @default(false)
+  maintenanceTitle   String?
+  maintenanceMessage String?
+  updatedById        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([route])
+  @@index([pageKey])
+  @@map("page_control")
+}
+
 enum UserRole {
   ADMIN
   MANAGEMENT
@@ -540,6 +557,7 @@ enum AuditAction {
   LEVEL_PROMOTION
   PROMOTED
   SEMESTER_SWITCH
+  PAGE_CONTROL_UPDATE
 }
 
 enum SeverityLevel {
