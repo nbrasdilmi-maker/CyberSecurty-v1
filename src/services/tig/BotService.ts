@@ -121,7 +121,7 @@ export class BotService {
       const tgId = ctx.from?.id;
       if (tgId) {
         await redis.del(`${this.SESSION_PREFIX}${tgId}`);
-        const msgsRaw = await redis.getdel(`tig:bot:msgs:${tgId}`);
+        const msgsRaw = await redis.getdel<string>(`tig:bot:msgs:${tgId}`);
         if (msgsRaw) {
           const { infoMsgId, otpMsgId } = JSON.parse(msgsRaw);
           try { if (infoMsgId) await ctx.api.deleteMessage(ctx.chat!.id, infoMsgId); } catch {}
@@ -277,13 +277,14 @@ export class BotService {
           await ctx.reply(`❌ رمز غير صحيح. المحاولات المتبقية: ${5 - data.attempts}`);
           return;
         }
-        const msgsRaw = await redis.getdel(`tig:bot:msgs:${tgId}`);
+        const msgsRaw = await redis.getdel<string>(`tig:bot:msgs:${tgId}`);
         if (msgsRaw) {
           const { infoMsgId, otpMsgId } = JSON.parse(msgsRaw);
           try { if (infoMsgId) await ctx.api.deleteMessage(ctx.chat!.id, infoMsgId); } catch {}
           try { if (otpMsgId) await ctx.api.deleteMessage(ctx.chat!.id, otpMsgId); } catch {}
         }
-        session.step = "awaiting_password";
+      }
+      session.step = "awaiting_password";
         await redis.set(`${this.SESSION_PREFIX}${tgId}`, JSON.stringify(session), { ex: OTP_TTL * 2 });
         pendingResetInputs.add(tgId);
         await ctx.reply("✅ تم التحقق من الرمز.\n\nالرجاء إرسال كلمة المرور الجديدة:\n• يجب أن تكون 8 أحرف على الأقل\n• يُفضل احتواؤها على أرقام وحروف");
