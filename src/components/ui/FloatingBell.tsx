@@ -20,6 +20,21 @@ interface NotificationItem {
   createdAt: string;
 }
 
+const notificationSound: Record<string, string> = {
+  NEW_MESSAGE: "/sounds/notification.mp3",
+  ASSIGNMENT_EVALUATED: "/sounds/notification.mp3",
+  NEW_ASSIGNMENT: "/sounds/notification.mp3",
+  GRADES_DISTRIBUTED: "/sounds/notification.mp3",
+  LEVEL_PROMOTED: "/sounds/notification.mp3",
+  NEW_ANNOUNCEMENT: "/sounds/alert.mp3",
+  NEW_CONTENT: "/sounds/alert.mp3",
+  ACCOUNT_MODIFIED: "/sounds/alert.mp3",
+};
+
+function getNotificationSound(type: string): string {
+  return notificationSound[type] || "/sounds/notification.mp3";
+}
+
 const typeIcons: Record<string, string> = {
   NEW_MESSAGE: "💬",
   ASSIGNMENT_EVALUATED: "✅",
@@ -259,8 +274,10 @@ export default function FloatingBell() {
         if (now - lastSoundTimeRef.current >= 1000) {
           lastSoundTimeRef.current = now;
           try {
-            if (!audioRef.current) {
-              audioRef.current = new Audio("/sounds/notification.mp3");
+            const soundPath = getNotificationSound(data.type || "");
+            if (!audioRef.current || (audioRef.current as any)._soundPath !== soundPath) {
+              audioRef.current = new Audio(soundPath);
+              (audioRef.current as any)._soundPath = soundPath;
             }
             audioRef.current.volume = 0.5;
             audioRef.current.currentTime = 0;
