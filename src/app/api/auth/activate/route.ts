@@ -75,7 +75,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     );
   }
 
-  const existingEmail = await prisma.user.findUnique({ where: { email } });
+  const existingEmail = await prisma.user.findUnique({ where: { email: email || undefined } });
   if (existingEmail && existingEmail.id !== user.id) {
     return NextResponse.json(
       {
@@ -101,16 +101,14 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     );
   }
 
-  if (!email) {
-    email = user.email;
-  }
+  const finalEmail = email || user.email;
 
   const passwordHash = await bcrypt.hash(password, 12);
 
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      email,
+      email: finalEmail,
       username,
       passwordHash,
       isActivated: true,
