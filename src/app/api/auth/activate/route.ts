@@ -143,7 +143,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     userName: user.name,
     userUsername: username,
     role: user.role,
-    email,
+    email: finalEmail,
     level: user.level,
     operationTime: new Date().toISOString(),
   });
