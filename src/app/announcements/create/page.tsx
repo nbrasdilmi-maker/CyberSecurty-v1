@@ -962,7 +962,7 @@ export default function CreateAnnouncementPage() {
                   marginBottom: "25px",
                 }}
               >
-                هل أنت متأكد من حذف التعميم: "{confirmDelete.title}"؟
+                هل أنت متأكد من حذف التعميم: &quot;{confirmDelete.title}&quot;؟
               </p>
               <div style={{ display: "flex", gap: "10px" }}>
                 <motion.button

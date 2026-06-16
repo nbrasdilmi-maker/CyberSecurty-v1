@@ -878,7 +878,7 @@ export default function ServerUsagePage() {
                   marginBottom: "25px",
                 }}
               >
-                هل أنت متأكد من حذف "{deleteConfirm.fileName}"؟
+                هل أنت متأكد من حذف &quot;{deleteConfirm.fileName}&quot;؟
               </p>
               <div style={{ display: "flex", gap: "10px" }}>
                 <motion.button

@@ -154,7 +154,7 @@ export default function TeacherAuditLogPage() {
   const exportExcel = () => {
     setExporting("excel");
     try {
-      let html = `
+      const html = `
         <html dir="rtl">
         <head><meta charset="utf-8">
           <style>
@@ -230,7 +230,7 @@ export default function TeacherAuditLogPage() {
   const exportPDF = () => {
     setExporting("pdf");
     try {
-      let html = `
+      const html = `
         <html dir="rtl">
         <head><meta charset="utf-8"><style>
           @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');

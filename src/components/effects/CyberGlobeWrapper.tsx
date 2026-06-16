@@ -12,7 +12,7 @@ const PUBLIC_PATHS = ["/", "/login", "/onboarding", "/activate", "/forgot-passwo
 export default function CyberGlobeWrapper() {
   const pathname = usePathname();
 
-  if (!PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p))) {
+  if (!PUBLIC_PATHS.some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)))) {
     return null;
   }
 

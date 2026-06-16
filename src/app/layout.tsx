@@ -6,6 +6,9 @@ import FloatingBell from "@/components/ui/FloatingBell";
 import AnimationsProvider from "@/components/providers/AnimationsProvider";
 import UserActivityTracker from "@/components/layout/UserActivityTracker";
 import EffectsManager from "@/components/effects/EffectsManager";
+import DashboardBackground from "@/components/effects/DashboardBackground";
+import NavigationProgress from "@/components/ui/NavigationProgress";
+import MatrixRain from "@/components/effects/MatrixRain";
 import PageGuardProvider from "@/components/ui/PageGuardProvider";
 export const metadata: Metadata = {
   title: "سحابة الأمن السيبراني - جامعة ذمار",
@@ -44,6 +47,11 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-[#010204] text-[#e6edf3] antialiased font-[Cairo]">
+        <NavigationProgress />
+        <DashboardBackground />
+        <div className="fixed inset-0 opacity-25 pointer-events-none">
+          <MatrixRain />
+        </div>
         <EffectsManager />
 
         <div className="relative z-10">

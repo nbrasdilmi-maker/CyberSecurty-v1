@@ -30,7 +30,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     );
   }
 
-  let { code, email, password, username } = validation.data;
+  const { code, email, password, username } = validation.data;
   const ip = request.headers.get("x-forwarded-for") || "unknown";
 
   const { success: rateLimitOk } = await activateRateLimiter.limit(ip);

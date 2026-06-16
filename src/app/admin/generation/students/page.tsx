@@ -204,7 +204,7 @@ export default function GenerateStudentsPage() {
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
+      if (n.has(id)) n.delete(id); else n.add(id);
       return n;
     });
   };
@@ -880,7 +880,7 @@ export default function GenerateStudentsPage() {
                 تأكيد الحذف
               </h3>
               <p style={{ color: "#8b949e", marginBottom: "20px" }}>
-                حذف "{deleteConfirm.name}"؟
+                حذف &quot;{deleteConfirm.name}&quot;؟
               </p>
               <div style={{ display: "flex", gap: "10px" }}>
                 <motion.button

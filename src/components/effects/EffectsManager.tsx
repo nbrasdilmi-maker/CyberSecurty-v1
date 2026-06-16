@@ -2,8 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import ScanLine from "@/components/effects/ScanLine";
-import MatrixRain from "@/components/effects/MatrixRain";
 import NeonParticles from "@/components/effects/NeonParticles";
 
 const CyberGlobe = dynamic(() => import("@/components/effects/CyberGlobe"), {
@@ -13,7 +11,7 @@ const CyberGlobe = dynamic(() => import("@/components/effects/CyberGlobe"), {
 const PUBLIC_PATHS = ["/", "/login", "/onboarding", "/activate", "/forgot-password"];
 
 function isPublicPage(pathname: string): boolean {
-  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p));
+  return PUBLIC_PATHS.some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)));
 }
 
 export default function EffectsManager() {
@@ -23,7 +21,7 @@ export default function EffectsManager() {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none">
+    <div className="fixed inset-0 pointer-events-none">
       <div className="absolute inset-0 quantum-grid opacity-20" />
       <div className="absolute inset-0 opacity-80">
         <CyberGlobe />
@@ -31,10 +29,6 @@ export default function EffectsManager() {
       <div className="absolute inset-0">
         <NeonParticles />
       </div>
-      <div className="absolute inset-0 opacity-25">
-        <MatrixRain />
-      </div>
-      <ScanLine />
     </div>
   );
 }
