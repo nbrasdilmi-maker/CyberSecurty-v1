@@ -92,7 +92,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     }
     await prisma.user.update({
       where: { id: user.id },
-      data: { managementLevel: body.managementLevel },
+      data: { managementLevel: body.managementLevel, tokenVersion: { increment: 1 } },
     });
     await prisma.auditLog.create({
       data: { userId: user.id, action: "UPDATE", severity: "INFO", description: `تمت الترقية إلى رتبة إدارة - المستوى: ${body.managementLevel}` },

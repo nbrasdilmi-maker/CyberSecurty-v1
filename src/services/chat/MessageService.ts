@@ -1,13 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import { NotFoundError, ForbiddenError, ValidationError } from "@/lib/errors";
 import { encryptMessage, decryptMessage } from "@/lib/crypto";
-import DOMPurify from "dompurify";
-import { JSDOM } from "jsdom";
 import { getEffectiveRole } from "@/lib/auth";
 import crypto from "crypto";
 import { getUserChannelName } from "@/lib/realtimeChannels";
 
-const purify = DOMPurify(new JSDOM("").window as any);
+function sanitizeText(text: string): string {
+  return text
+    .replace(/<[^>]*>/g, "")
+    .replace(/[&<>"']/g, (char) => {
+      const entities: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+      return entities[char] || char;
+    })
+    .trim();
+}
 
 export class MessageService {
   static async getConversations(
@@ -146,7 +152,7 @@ export class MessageService {
     replyToId?: string,
     idempotencyKey?: string,
   ) {
-    const sanitized = purify.sanitize(body, { ALLOWED_TAGS: [] });
+    const sanitized = sanitizeText(body);
     const encryptedBody = encryptMessage(sanitized);
 
     if (!idempotencyKey) {
@@ -185,7 +191,7 @@ export class MessageService {
       throw new ForbiddenError("غير مصرح");
     }
 
-    const sanitized = purify.sanitize(newBody.trim(), { ALLOWED_TAGS: [] });
+    const sanitized = sanitizeText(newBody);
     const encryptedBody = encryptMessage(sanitized);
 
     await prisma.message.update({

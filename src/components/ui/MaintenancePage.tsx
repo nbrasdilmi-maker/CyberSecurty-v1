@@ -87,7 +87,7 @@ export default function MaintenancePage({ title, message }: MaintenancePageProps
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/")}
             style={{
               padding: "14px 36px",
               borderRadius: "14px",

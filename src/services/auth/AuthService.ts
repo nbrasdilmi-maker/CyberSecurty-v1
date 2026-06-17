@@ -121,6 +121,7 @@ export class AuthService {
       email: user.email,
       role: user.role,
       level: user.level || undefined,
+      managementLevel: user.managementLevel || null,
       tokenVersion: user.tokenVersion,
     });
     const refreshToken = await createInitialTokens(user.id, {

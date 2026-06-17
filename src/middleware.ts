@@ -173,23 +173,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", APP_URL));
   }
 
+  // المسارات غير المحمية بالأدوار — فقط نتأكد من وجود token بدون فك تشفير JWT (أسرع)
+  const protectedPaths = [...adminPaths, ...managementPaths, ...teacherPaths, ...studentPaths];
+  const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
+  if (!isProtected) {
+    return response;
+  }
+
   // التحقق من صحة JWT (يتم محلياً — لا حاجة لـ self-fetch)
   try {
     const { payload } = await jwtVerify(accessToken, ACCESS_SECRET);
 
-    const userRole = payload.role as string;
+    const userRole = payload.managementLevel ? "MANAGEMENT" : (payload.role as string);
 
     // التحقق من صلاحية الدور للمسار المطلوب
     const isAdminPath = adminPaths.some((p) => pathname.startsWith(p));
-    const isAllowedManagementPath =
-      userRole === "MANAGEMENT" &&
-      (pathname.startsWith("/admin/generation") ||
-        pathname.startsWith("/admin/promotions") ||
-        pathname.startsWith("/admin/server-usage") ||
-        pathname.startsWith("/admin/activated-accounts") ||
-        pathname.startsWith("/admin/audit-log") ||
-        pathname.startsWith("/admin/semester"));
-    if (isAdminPath && userRole !== "ADMIN" && !isAllowedManagementPath) {
+    if (isAdminPath && userRole !== "ADMIN" && userRole !== "MANAGEMENT") {
       return NextResponse.redirect(new URL("/login", APP_URL));
     }
 

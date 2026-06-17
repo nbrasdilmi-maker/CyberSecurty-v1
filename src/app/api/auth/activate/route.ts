@@ -10,7 +10,6 @@ import { AdminNotificationService } from "@/services/notification/AdminNotificat
 const activateSchema = z
   .object({
     code: z.string().min(4, "كود التفعيل غير صحيح"),
-    email: z.string().email("بريد إلكتروني غير صالح").optional().or(z.literal("")),
     password: z.string().min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل"),
     confirmPassword: z.string(),
     username: z.string().min(3, "اسم المستخدم يجب أن يكون 3 أحرف على الأقل").max(50).regex(/^[a-zA-Z0-9._-]+$/, "اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط"),
@@ -30,7 +29,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     );
   }
 
-  const { code, email, password, username } = validation.data;
+  const { code, password, username } = validation.data;
   const ip = request.headers.get("x-forwarded-for") || "unknown";
 
   const { success: rateLimitOk } = await activateRateLimiter.limit(ip);
@@ -75,17 +74,6 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     );
   }
 
-  const existingEmail = await prisma.user.findUnique({ where: { email: email || undefined } });
-  if (existingEmail && existingEmail.id !== user.id) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "البريد الإلكتروني مستخدم بالفعل في حساب آخر",
-      },
-      { status: 400 },
-    );
-  }
-
   const activationCode = await prisma.activationCode.findFirst({
     where: {
       codeHash,
@@ -101,7 +89,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     );
   }
 
-  const finalEmail = email || user.email;
+  const finalEmail = user.email;
 
   const passwordHash = await bcrypt.hash(password, 12);
 

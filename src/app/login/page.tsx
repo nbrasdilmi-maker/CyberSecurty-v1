@@ -494,7 +494,6 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code: activateCode,
-          email: activateEmail,
           password: activatePassword,
           confirmPassword: activateConfirm,
           username: finalUsername,
@@ -1162,11 +1161,6 @@ export default function LoginPage() {
                 {/* ===== المرحلة 3: كلمة المرور ===== */}
                 {activateStep === "password" && (
                   <>
-                    <div style={{ background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.2)", borderRadius: "12px", padding: "12px", marginBottom: 12 }}>
-                      <p style={{ color: "#8b949e", fontSize: "0.78rem", margin: 0 }}>
-                        ℹ️ بريدك الإلكتروني مسجل في النظام ولن يظهر للمستخدمين الآخرين.
-                      </p>
-                    </div>
                     <p style={{ color: "#8b949e", fontSize: "0.85rem", marginBottom: 12, textAlign: "right" }}>
                       أدخل كلمة مرور قوية لحماية حسابك:
                     </p>
