@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Sidebar from "@/components/layout/Sidebar";
+import PageTransition from "@/components/layout/PageTransition";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import { deriveStaticChannelName } from "@/lib/realtimeChannels";
-import { csrfFetch } from "@/lib/csrfClient";
 
 interface StudentItem {
   id: string;
@@ -128,7 +129,7 @@ export default function PromotePage() {
     setPromoting(true);
     setMessage("");
     try {
-      const res = await csrfFetch("/api/semester/promote", {
+      const res = await fetch("/api/semester/promote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -144,7 +145,7 @@ export default function PromotePage() {
         setExcludedStudents([]);
         loadData();
       } else {
-        setMessage(`❌ ${data.message || data.error || "حدث خطأ"}`);
+        setMessage(`❌ ${data.error || "حدث خطأ"}`);
       }
     } catch {
       setMessage("❌ حدث خطأ في الاتصال");
@@ -167,9 +168,11 @@ export default function PromotePage() {
         color: "#fff",
       }}
     >
+      <Sidebar />
+      <PageTransition>
         <main
           style={{
-            padding: "24px 16px 60px",
+            padding: "100px 16px 60px",
             maxWidth: "1100px",
             margin: "0 auto",
           }}
@@ -543,6 +546,7 @@ export default function PromotePage() {
             </motion.div>
           ) : null}
         </main>
+      </PageTransition>
 
       {/* نافذة التأكيد */}
       <AnimatePresence>
@@ -682,7 +686,7 @@ export default function PromotePage() {
           background: rgba(191, 90, 242, 0.12);
           border-radius: 10px;
         }
-      `}      </style>
+      `}</style>
     </div>
   );
 }

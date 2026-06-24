@@ -37,6 +37,7 @@ export async function scanFile(
   fileName: string,
 ): Promise<ScanResult> {
   if (!CLAMAV_ENABLED) {
+    console.warn("⚠️ ClamAV معطل (CLAMAV_ENABLED=false)، لم يتم فحص:", fileName);
     return { isInfected: false, viruses: [], error: "ClamAV معطل" };
   }
 

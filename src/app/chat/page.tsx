@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import Sidebar from "@/components/layout/Sidebar";
+import PageTransition from "@/components/layout/PageTransition";
 import { useAuthStore } from "@/store/authStore";
 import ChatArea from "@/components/chat/ChatArea";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
@@ -581,10 +584,22 @@ export default function ChatPage() {
 
   // ==================== الواجهة ====================
   return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "transparent",
+        fontFamily: "'Cairo', sans-serif",
+        color: "#fff",
+      }}
+    >
+      <Header />
+      <Sidebar />
+      <PageTransition>
         <div
           style={{
             display: "flex",
-            height: "calc(100vh - 56px)",
+            height: "calc(100vh - 60px)",
+            paddingTop: "90px",
           }}
         >
           {/* ========== قائمة المحادثات ========== */}
@@ -992,5 +1007,8 @@ export default function ChatPage() {
             />
           </div>
         </div>
+      </PageTransition>
+      <Footer />
+    </div>
   );
 }

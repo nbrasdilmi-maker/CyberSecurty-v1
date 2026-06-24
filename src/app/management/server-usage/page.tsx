@@ -3,7 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import Sidebar from "@/components/layout/Sidebar";
 import { useToast } from "@/components/ui/Toast";
+import PageTransition from "@/components/layout/PageTransition";
 import { useAuthStore } from "@/store/authStore";
 import { csrfFetch } from "@/lib/csrfClient";
 
@@ -170,11 +174,14 @@ export default function ManagementServerUsagePage() {
         color: "#fff",
       }}
     >
-      <main
+      <Header />
+      <Sidebar />
+      <PageTransition>
+        <main
           style={{
             maxWidth: "1300px",
             margin: "0 auto",
-            padding: "24px 20px 60px",
+            padding: "100px 20px 60px",
           }}
         >
           <motion.div
@@ -791,6 +798,7 @@ export default function ManagementServerUsagePage() {
             </motion.div>
           )}
         </main>
+      </PageTransition>
 
       <AnimatePresence>
         {deleteConfirm.show && (
@@ -908,6 +916,7 @@ export default function ManagementServerUsagePage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <Footer />
     </div>
   );
 }

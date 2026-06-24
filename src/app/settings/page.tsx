@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-
+import Header from "@/components/layout/Header";
+import Sidebar from "@/components/layout/Sidebar";
+import PageTransition from "@/components/layout/PageTransition";
 
 import TwoFATab from "@/components/settings/TwoFATab";
 import { useToast } from "@/components/ui/Toast";
@@ -210,9 +212,12 @@ export default function SettingsPage() {
         color: "#fff",
       }}
     >
-      <main
+      <Header />
+      <Sidebar />
+      <PageTransition>
+        <main
           style={{
-            padding: "24px 20px 60px",
+            padding: "100px 20px 60px",
             maxWidth: "900px",
             margin: "0 auto",
           }}
@@ -710,6 +715,7 @@ export default function SettingsPage() {
             <TelegramTab onUpdate={() => fetchProfile()} />
           )}
         </main>
+      </PageTransition>
     </div>
   );
 }

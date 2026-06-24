@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-
+import Sidebar from "@/components/layout/Sidebar";
+import PageTransition from "@/components/layout/PageTransition";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import { deriveStaticChannelName } from "@/lib/realtimeChannels";
@@ -150,9 +151,19 @@ export default function SharedFilesPage() {
   };
 
   return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "transparent",
+        fontFamily: "'Cairo', sans-serif",
+        color: "#fff",
+      }}
+    >
+      <Sidebar />
+      <PageTransition>
         <main
           style={{
-            padding: "24px 12px 50px",
+            padding: "90px 12px 50px",
             maxWidth: "1100px",
             margin: "0 auto",
             width: "100%",
@@ -410,5 +421,7 @@ export default function SharedFilesPage() {
             </div>
           )}
         </main>
+      </PageTransition>
+    </div>
   );
 }

@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Sidebar from "@/components/layout/Sidebar";
+import PageTransition from "@/components/layout/PageTransition";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import { deriveStaticChannelName } from "@/lib/realtimeChannels";
@@ -195,13 +197,26 @@ export default function SecurityRadarPage() {
   };
 
   return (
-    <main
+    <div
       style={{
-        padding: "24px 20px 60px",
-        maxWidth: "1300px",
-        margin: "0 auto",
+        minHeight: "100vh",
+        background: "transparent",
+        fontFamily: "'Cairo', sans-serif",
+        color: "#fff",
+        position: "relative",
       }}
     >
+      <Sidebar />
+      <PageTransition>
+        <main
+          style={{
+            padding: "100px 20px 60px",
+            maxWidth: "1300px",
+            margin: "0 auto",
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
           {/* الهيدر */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -621,6 +636,31 @@ export default function SecurityRadarPage() {
               <p style={{ color: "#8b949e" }}>جاري تحميل الإحصائيات...</p>
             </div>
           )}
-      </main>
+        </main>
+      </PageTransition>
+
+      {/* أنيميشن pulse للـ Skeleton */}
+      <style jsx global>{`
+        @keyframes pulse {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.4;
+          }
+        }
+        ::-webkit-scrollbar {
+          width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(0, 229, 255, 0.2);
+          border-radius: 10px;
+        }
+      `}</style>
+    </div>
   );
 }

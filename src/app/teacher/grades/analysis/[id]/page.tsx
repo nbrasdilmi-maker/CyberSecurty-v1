@@ -3,7 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import Sidebar from "@/components/layout/Sidebar";
 import { useToast } from "@/components/ui/Toast";
+import PageTransition from "@/components/layout/PageTransition";
 import { useAuthStore } from "@/store/authStore";
 import { csrfFetch } from "@/lib/csrfClient";
 
@@ -208,11 +212,14 @@ export default function AnalysisDetailPage() {
         color: "#fff",
       }}
     >
-      <main
+      <Header />
+      <Sidebar />
+      <PageTransition>
+        <main
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
-            padding: "24px 15px 60px",
+            padding: "100px 15px 60px",
           }}
         >
           <motion.div
@@ -651,6 +658,8 @@ export default function AnalysisDetailPage() {
             )}
           </AnimatePresence>
         </main>
+      </PageTransition>
+      <Footer />
     </div>
   );
 }

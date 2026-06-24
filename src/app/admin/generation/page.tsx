@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import Sidebar from "@/components/layout/Sidebar";
 import { useToast } from "@/components/ui/Toast";
+import PageTransition from "@/components/layout/PageTransition";
 import { useAuthStore } from "@/store/authStore";
 
 const BackIcon = () => (
@@ -72,13 +76,23 @@ export default function GenerationHub() {
   ];
 
   return (
-    <>
-      <main
-        style={{
-          maxWidth: "1000px",
-          margin: "0 auto",
-          padding: "24px 20px 60px",
-        }}
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "transparent",
+        fontFamily: "'Cairo', sans-serif",
+        color: "#fff",
+      }}
+    >
+      <Header />
+      <Sidebar />
+      <PageTransition>
+        <main
+          style={{
+            maxWidth: "1000px",
+            margin: "0 auto",
+            padding: "100px 20px 60px",
+          }}
         >
           {/* الهيدر */}
           <motion.div
@@ -267,6 +281,8 @@ export default function GenerationHub() {
               ))}
           </motion.div>
         </main>
-    </>
+      </PageTransition>
+      <Footer />
+    </div>
   );
 }

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import PageTransition from "@/components/layout/PageTransition";
-import { Home } from "lucide-react";
 
 import {
   startAuthentication,
@@ -642,114 +641,6 @@ export default function LoginPage() {
         {/* شبكة كمومية */}
         <div className="absolute inset-0 quantum-grid z-0" />
 
-        {/* ==================== الهيدر ==================== */}
-        <header
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 100,
-            height: 56,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 clamp(14px, 4vw, 36px)",
-            background: "transparent",
-            borderBottom: "1px solid transparent",
-            transition: "border-color 0.5s",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              flexShrink: 0,
-              opacity: 0.85,
-              transition: "opacity 0.3s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.85")}
-          >
-            <div
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 8,
-                background: "transparent",
-                border: "1.5px solid rgba(0,229,255,0.6)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.8rem",
-                fontWeight: 800,
-                color: "#00e5ff",
-                fontFamily: "'Orbitron', sans-serif",
-                transition: "box-shadow 0.4s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 24px rgba(0,229,255,0.25)")}
-              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
-            >
-              CS
-            </div>
-            <span
-              style={{
-                color: "rgba(255,255,255,0.6)",
-                fontWeight: 600,
-                fontSize: "clamp(0.65rem, 1.1vw, 0.82rem)",
-                fontFamily: "'Orbitron', sans-serif",
-                letterSpacing: "1px",
-                transition: "color 0.3s, text-shadow 0.3s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#00e5ff";
-                e.currentTarget.style.textShadow = "0 0 20px rgba(0,229,255,0.5)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "rgba(255,255,255,0.6)";
-                e.currentTarget.style.textShadow = "none";
-              }}
-            >
-              CYBER CLOUD
-            </span>
-          </div>
-
-          <button
-            onClick={() => router.push("/")}
-            style={{
-              background: "transparent",
-              border: "1px solid rgba(255,255,255,0.06)",
-              color: "rgba(255,255,255,0.5)",
-              fontFamily: "'Cairo', sans-serif",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "6px 16px",
-              borderRadius: 8,
-              fontSize: "clamp(0.7rem, 1vw, 0.78rem)",
-              fontWeight: 600,
-              transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(0,229,255,0.35)";
-              e.currentTarget.style.color = "#00e5ff";
-              e.currentTarget.style.boxShadow = "0 0 24px rgba(0,229,255,0.12)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
-              e.currentTarget.style.color = "rgba(255,255,255,0.5)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            <Home size={14} strokeWidth={1.5} />
-            الرئيسية
-          </button>
-        </header>
-
         {/* الكرة الأرضية - تتحرك يمين/يسار */}
         <motion.div
           animate={{
@@ -791,38 +682,38 @@ export default function LoginPage() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "clamp(8px, 1.5vw, 14px) clamp(12px, 5vw, 60px)",
-            background: "rgba(2, 4, 8, 0.7)",
-            backdropFilter: "blur(30px)",
-            WebkitBackdropFilter: "blur(30px)",
-            borderBottom: "1px solid rgba(0, 229, 255, 0.08)",
-            boxShadow: "0 4px 30px rgba(0,0,0,0.3)",
+            padding: "12px 5%",
+            background: "rgba(2, 4, 8, 0.75)",
+            backdropFilter: "blur(25px)",
+            WebkitBackdropFilter: "blur(25px)",
+            borderBottom: "2px solid rgba(0, 229, 255, 0.3)",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
             flexWrap: "wrap",
-            gap: "4px",
+            gap: "8px",
           }}
         >
           <div
             style={{
               fontFamily: "'Orbitron', sans-serif",
-              fontSize: "clamp(0.75rem, 2.5vw, 1.4rem)",
+              fontSize: "clamp(1rem, 3vw, 1.8rem)",
               fontWeight: 700,
               color: "#00e5ff",
-              textShadow: "0 0 12px rgba(0,229,255,0.3)",
+              textShadow: "0 0 15px #00e5ff, 0 0 30px rgba(0,229,255,0.4)",
+              minWidth: "140px",
               direction: "ltr",
-              whiteSpace: "nowrap",
             }}
           >
             {clock}
           </div>
 
-          <div style={{ textAlign: "center", flex: 1, minWidth: 0 }}>
+          <div style={{ textAlign: "center", flex: 1 }}>
             <h2
               style={{
-                fontSize: "clamp(0.7rem, 1.8vw, 1.1rem)",
+                fontSize: "clamp(0.9rem, 2vw, 1.3rem)",
                 fontWeight: 700,
-                color: "#e6edf3",
+                color: "#fff",
+                textShadow: "0 0 15px #00e5ff, 0 0 30px rgba(0,229,255,0.4)",
                 margin: 0,
-                lineHeight: 1.2,
               }}
             >
               سحابة الأمن السيبراني
@@ -830,39 +721,39 @@ export default function LoginPage() {
             <p
               style={{
                 fontFamily: "'Orbitron', sans-serif",
-                fontSize: "clamp(0.5rem, 1.2vw, 0.7rem)",
-                color: "rgba(0,229,255,0.7)",
+                fontSize: "clamp(0.6rem, 1.4vw, 0.85rem)",
+                color: "#00e5ff",
                 textTransform: "uppercase",
-                letterSpacing: "1px",
-                margin: "1px 0 0",
+                letterSpacing: "2px",
+                margin: "2px 0 0",
               }}
             >
               Cybersecurity Cloud
             </p>
           </div>
 
-          <div style={{ textAlign: "right", minWidth: 0 }}>
-            <div
+          <div style={{ textAlign: "right" }}>
+            <h1
               style={{
-                fontSize: "clamp(0.65rem, 2vw, 1rem)",
-                color: "#e6edf3",
-                fontWeight: 700,
+                fontSize: "clamp(0.85rem, 2.5vw, 1.3rem)",
+                color: "#fff",
+                fontWeight: 900,
+                textShadow: "0 0 10px rgba(0,229,255,0.3)",
                 margin: 0,
-                lineHeight: 1.2,
               }}
             >
               جامعة ذمار - كلية الحاسبات
-            </div>
+            </h1>
             <p
               style={{
-                fontSize: "clamp(0.45rem, 1.2vw, 0.65rem)",
-                color: "rgba(0,229,255,0.6)",
+                fontSize: "clamp(0.65rem, 1.8vw, 0.9rem)",
+                color: "#00e5ff",
                 fontFamily: "'Orbitron', sans-serif",
                 fontWeight: 500,
-                margin: "1px 0 0",
+                margin: "2px 0 0",
               }}
             >
-              Cyber Security Dept.
+              Cyber Security Department
             </p>
           </div>
         </header>
@@ -1687,81 +1578,31 @@ export default function LoginPage() {
             left: 0,
             right: 0,
             zIndex: 50,
-            padding: "clamp(8px, 1.5vw, 14px) 16px",
+            padding: "8px",
             textAlign: "center",
-            background: "transparent",
-            borderTop: "1px solid rgba(255,255,255,0.03)",
-            transition: "border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderTopColor = "rgba(0,229,255,0.06)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderTopColor = "rgba(255,255,255,0.03)";
+            background: "rgba(2, 4, 8, 0.75)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderTop: "1px solid rgba(0, 229, 255, 0.15)",
+            fontSize: "clamp(0.65rem, 1.3vw, 0.8rem)",
+            color: "#bbb",
           }}
         >
-          <div
-            style={{
-              fontSize: "clamp(0.5rem, 1vw, 0.72rem)",
-              color: "rgba(255,255,255,0.3)",
-              fontWeight: 400,
-              transition: "color 0.5s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
-          >
+          <div>
             تطوير وإشراف:{" "}
-            <span
-              style={{
-                color: "rgba(255,255,255,0.35)",
-                fontWeight: 500,
-                cursor: "default",
-                transition: "color 0.4s, text-shadow 0.4s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#00e5ff";
-                e.currentTarget.style.textShadow = "0 0 24px rgba(0,229,255,0.6), 0 0 48px rgba(0,229,255,0.2)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "rgba(255,255,255,0.35)";
-                e.currentTarget.style.textShadow = "none";
-              }}
-            >
-              محمد إبراهيم الديلمي
-            </span>
-            <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 3px" }}>|</span>
-            <span
-              style={{
-                color: "rgba(255,255,255,0.35)",
-                fontWeight: 500,
-                cursor: "default",
-                transition: "color 0.4s, text-shadow 0.4s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#00e5ff";
-                e.currentTarget.style.textShadow = "0 0 24px rgba(0,229,255,0.6), 0 0 48px rgba(0,229,255,0.2)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "rgba(255,255,255,0.35)";
-                e.currentTarget.style.textShadow = "none";
-              }}
-            >
-              أحمد الهيدمة
+            <span style={{ color: "#00e5ff", fontWeight: "bold" }}>
+              محمد إبراهيم الديلمي | أحمد الهيدمة
             </span>
           </div>
           <div
             style={{
               fontFamily: "'Orbitron', sans-serif",
-              fontSize: "clamp(0.4rem, 0.8vw, 0.55rem)",
-              color: "rgba(255,255,255,0.15)",
-              marginTop: 2,
-              letterSpacing: "0.5px",
-              transition: "color 0.5s",
+              fontSize: "0.65rem",
+              opacity: 0.6,
+              marginTop: "3px",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.15)")}
           >
-            OFFICIAL CYBER SECURITY PLATFORM — DHAMAR UNIVERSITY &copy; 2026
+            OFFICIAL CYBER SECURITY PLATFORM - DHAMAR UNIVERSITY &copy; 2026
           </div>
         </footer>
       </div>

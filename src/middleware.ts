@@ -101,21 +101,6 @@ function clearCookiesAndRedirect() {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Fast path for source map requests (prevents 404 noise)
-  if (pathname.endsWith(".map")) {
-    return new NextResponse(null, { status: 204 });
-  }
-
-  // Fast path for other static assets (no auth needed)
-  if (pathname.startsWith("/_next/static/")) {
-    return NextResponse.next();
-  }
-
-  if (pathname.endsWith("com.chrome.devtools.json")) {
-    return new NextResponse(null, { status: 204 });
-  }
-
   const response = NextResponse.next();
 
   // Correlation ID للتتبع
@@ -243,6 +228,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/image|favicon.ico|sw.js|push-sw.js|manifest.json|fonts|images|icons|sounds).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|push-sw.js|manifest.json|fonts|images|icons|sounds).*)",
   ],
 };

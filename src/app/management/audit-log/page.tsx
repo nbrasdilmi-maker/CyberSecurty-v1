@@ -3,7 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import Sidebar from "@/components/layout/Sidebar";
 import { useToast } from "@/components/ui/Toast";
+import PageTransition from "@/components/layout/PageTransition";
 import Pagination from "@/components/ui/Pagination";
 import { usePagination } from "@/hooks/usePagination";
 import { useAuthStore } from "@/store/authStore";
@@ -167,11 +171,14 @@ export default function ManagementAuditLogPage() {
         color: "#fff",
       }}
     >
-      <main
+      <Header />
+      <Sidebar />
+      <PageTransition>
+        <main
           style={{
             maxWidth: "1500px",
             margin: "0 auto",
-            padding: "24px 20px 60px",
+            padding: "100px 20px 60px",
           }}
         >
           <motion.div
@@ -617,6 +624,8 @@ export default function ManagementAuditLogPage() {
             </>
           )}
         </main>
+      </PageTransition>
+      <Footer />
     </div>
   );
 }

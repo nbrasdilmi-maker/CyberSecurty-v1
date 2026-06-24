@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { csrfFetch } from "@/lib/csrfClient";
 import { motion } from "framer-motion";
-
+import Header from "@/components/layout/Header";
+import Sidebar from "@/components/layout/Sidebar";
+import PageTransition from "@/components/layout/PageTransition";
 import { useAuthStore } from "@/store/authStore";
 
 export default function ManagementUpgradePage() {
@@ -48,7 +50,10 @@ export default function ManagementUpgradePage() {
 
   return (
     <div className="min-h-screen bg-[#010204]" style={{ fontFamily: "'Cairo', sans-serif" }}>
-      <div className="relative z-10 pr-0 lg:pr-[20px] p-4 lg:p-8 pt-6 max-w-2xl mx-auto">
+      <Header />
+      <Sidebar />
+      <PageTransition>
+      <div className="relative z-10 pr-0 lg:pr-[20px] p-4 lg:p-8 pt-[100px] max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl font-bold text-white mb-2 text-center">ترقية المستخدمين</h1>
           <p className="text-[#8b949e] text-sm mb-8 text-center">منح صلاحية النشر في المكتبة التعليمية</p>
@@ -108,6 +113,7 @@ export default function ManagementUpgradePage() {
           </div>
         </motion.div>
       </div>
+      </PageTransition>
     </div>
   );
 }
