@@ -26,5 +26,5 @@ function Gauge({ item, index }: { item: GaugeItem; index: number }) {
   );
 }
 export default function Gauges({ data = defaultData }: GaugesProps) {
-  return <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", justifyItems: "center", padding: "10px 0" }}>{data.map((item, i) => <Gauge key={item.label} item={item} index={i} />)}</div>;
+  return <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "12px", justifyItems: "center", padding: "10px 0" }}>{data.map((item, i) => <Gauge key={item.label} item={item} index={i} />)}</div>;
 }

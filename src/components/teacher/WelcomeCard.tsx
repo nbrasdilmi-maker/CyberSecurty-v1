@@ -6,6 +6,8 @@ interface Props {
   userName: string;
   userLevel: string;
   onLogout: () => void;
+  lastLoginAt?: string | null;
+  createdAt?: string;
 }
 
 const glassStyle: React.CSSProperties = {
@@ -24,23 +26,9 @@ const getLevelLabel = (l: string) =>
     LEVEL_4: "المستوى الرابع",
   })[l] || l;
 
-const ChalkboardIllustration = () => (
-  <svg width="140" height="100" viewBox="0 0 140 100" fill="none">
-    <rect x="15" y="8" width="110" height="72" rx="6" fill="rgba(168,85,247,0.08)" stroke="#A855F7" strokeWidth="1.5" />
-    <rect x="22" y="15" width="96" height="50" rx="3" fill="rgba(0,0,0,0.25)" />
-    <rect x="28" y="20" width="40" height="4" rx="2" fill="#A855F7" opacity="0.6" />
-    <rect x="28" y="28" width="60" height="3" rx="1.5" fill="rgba(255,255,255,0.12)" />
-    <rect x="28" y="34" width="50" height="3" rx="1.5" fill="rgba(255,255,255,0.12)" />
-    <rect x="28" y="40" width="55" height="3" rx="1.5" fill="rgba(255,255,255,0.12)" />
-    <rect x="28" y="46" width="35" height="3" rx="1.5" fill="rgba(255,255,255,0.12)" />
-    <circle cx="85" cy="33" r="14" fill="rgba(168,85,247,0.1)" stroke="#A855F7" strokeWidth="1" />
-    <path d="M81 33l3 3 5-5" stroke="#A855F7" strokeWidth="1.5" strokeLinecap="round" />
-    <rect x="20" y="80" width="100" height="3" rx="1.5" fill="rgba(255,255,255,0.05)" />
-    <rect x="35" y="72" width="70" height="1" fill="rgba(168,85,247,0.2)" />
-  </svg>
-);
 
-export default function WelcomeCard({ userName, userLevel, onLogout }: Props) {
+
+export default function WelcomeCard({ userName, userLevel, onLogout, lastLoginAt, createdAt }: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -100,10 +88,17 @@ export default function WelcomeCard({ userName, userLevel, onLogout }: Props) {
           </p>
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "15px", zIndex: 1 }}>
-        <div style={{ opacity: 0.7 }}>
-          <ChalkboardIllustration />
-        </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", zIndex: 1 }}>
+        {lastLoginAt && (
+          <span style={{ padding: "3px 12px", borderRadius: "20px", fontSize: "0.72rem", background: "rgba(0,229,255,0.08)", border: "1px solid rgba(0,229,255,0.15)", color: "#00e5ff", fontWeight: 600, whiteSpace: "nowrap" }}>
+            ⏱ آخر دخول: {new Date(lastLoginAt).toLocaleDateString("ar-SA", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+          </span>
+        )}
+        {createdAt && (
+          <span style={{ padding: "3px 12px", borderRadius: "20px", fontSize: "0.72rem", background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.15)", color: "#A855F7", fontWeight: 600, whiteSpace: "nowrap" }}>
+            🎓 عضو منذ: {(() => { const dt = new Date(createdAt); const m = (new Date().getFullYear() - dt.getFullYear()) * 12 + (new Date().getMonth() - dt.getMonth()); return m < 1 ? "شهر" : m < 12 ? `${m} أشهر` : `${Math.floor(m / 12)} سنوات`; })()}
+          </span>
+        )}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

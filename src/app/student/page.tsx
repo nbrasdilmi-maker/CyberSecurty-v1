@@ -253,7 +253,7 @@ export default function StudentDashboardV2() {
 
   const mobileContent = (
     <div style={{ position: "relative", minHeight: "200px" }}>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", justifyContent: "center", flexWrap: "wrap" }}>
         {tabMeta.map((t) => (
           <motion.button
             key={t.key}
@@ -339,10 +339,11 @@ export default function StudentDashboardV2() {
         background: "transparent",
         fontFamily: "'Cairo', sans-serif",
         color: "#fff",
+        overflowX: "hidden",
       }}
     >
-      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 20px 60px" }}>
-        <WelcomeHero userName={userName} userLevel={userLevel} />
+      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: isMobile ? "16px 10px 60px" : "24px 20px 60px" }}>
+        <WelcomeHero userName={userName} userLevel={userLevel} lastLoginAt={user?.lastLoginAt} createdAt={user?.createdAt} />
         <QuickShortcuts />
         <StatsCards stats={stats} loading={loading} />
         {isMobile ? mobileContent : desktopGrid}

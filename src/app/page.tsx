@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import MatrixRain from "@/components/effects/MatrixRain";
 import NeonParticles from "@/components/effects/NeonParticles";
-import ScanLine from "@/components/effects/ScanLine";
 import {
   HeroSection,
   StatsSection,
@@ -89,7 +88,6 @@ export default function HomePage() {
       <div className="absolute inset-0 quantum-grid z-0" style={{ pointerEvents: "none" }} />
       <MatrixRain />
       <NeonParticles />
-      <ScanLine />
 
       <style>{`
         .scroll-hide::-webkit-scrollbar { display: none; }

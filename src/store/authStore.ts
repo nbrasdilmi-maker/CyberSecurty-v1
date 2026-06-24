@@ -8,6 +8,8 @@ interface User {
   level: string;
   webAuthnEnabled: boolean;
   managementLevel?: string | null;
+  lastLoginAt?: string | null;
+  createdAt?: string;
 }
 
 interface AuthState {

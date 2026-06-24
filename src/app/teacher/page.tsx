@@ -132,6 +132,14 @@ export default function TeacherDashboard() {
   const userName = user?.name || "";
   const userRole = user?.role || "";
   const userLevel = user?.level || "";
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useSupabaseRealtime(`user-${userId}`, "assignment-update", () => {
     loadPending();
@@ -380,16 +388,17 @@ export default function TeacherDashboard() {
         background: "transparent",
         fontFamily: "'Cairo', sans-serif",
         color: "#fff",
+        overflowX: "hidden",
       }}
     >
       <main
           style={{
             maxWidth: "1300px",
             margin: "0 auto",
-            padding: "24px 20px 60px",
+            padding: isMobile ? "16px 10px 60px" : "24px 20px 60px",
           }}
         >
-          <WelcomeCard userName={userName} userLevel={userLevel} onLogout={handleLogout} />
+          <WelcomeCard userName={userName} userLevel={userLevel} onLogout={handleLogout} lastLoginAt={user?.lastLoginAt} createdAt={user?.createdAt} />
 
           <QuickShortcuts
             shortcuts={[

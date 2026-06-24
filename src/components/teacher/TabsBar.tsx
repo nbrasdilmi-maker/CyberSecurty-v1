@@ -31,6 +31,8 @@ export default function TabsBar({ tabs, activeTab, onTabChange }: Props) {
         display: "flex",
         gap: "6px",
         marginBottom: "25px",
+        overflowX: "auto",
+        flexWrap: "nowrap",
       }}
     >
       {tabs.map((tab) => {
@@ -42,7 +44,7 @@ export default function TabsBar({ tabs, activeTab, onTabChange }: Props) {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             style={{
-              flex: 1,
+              flex: "0 0 auto",
               padding: "12px 16px",
               borderRadius: "16px",
               border: "none",

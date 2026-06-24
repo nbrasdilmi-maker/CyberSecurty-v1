@@ -94,11 +94,11 @@ export default function SidebarMenu() {
                 background: isActive ? undefined : "rgba(255,255,255,0.03)",
               }}
               whileTap={{ scale: 0.97 }}
-              title={!isExpanded ? item.label : undefined}
+              title={isMobile || isExpanded ? undefined : item.label}
               onClick={() => { router.push(item.path); if (isMobile) setOpen(false); }}
               style={{
                 display: "flex", alignItems: "center", gap: "10px", width: "100%",
-                padding: isExpanded ? "9px 12px" : "9px 0",
+                padding: isMobile || isExpanded ? "9px 12px" : "9px 0",
                 marginBottom: "2px",
                 borderRadius: "10px",
                 border: isActive ? `1px solid ${item.color}30` : "1px solid transparent",
@@ -108,12 +108,12 @@ export default function SidebarMenu() {
                 color: isActive ? item.color : "#8b949e",
                 cursor: "pointer",
                 fontFamily: "'Cairo', sans-serif",
-                fontSize: isExpanded ? "0.75rem" : "0.65rem",
+                fontSize: isMobile || isExpanded ? "0.75rem" : "0.65rem",
                 fontWeight: isActive ? 700 : 500,
                 textAlign: "right",
                 transition: "all 0.2s ease",
                 position: "relative",
-                justifyContent: isExpanded ? "flex-start" : "center",
+                justifyContent: isMobile || isExpanded ? "flex-start" : "center",
                 overflow: "hidden",
               }}
             >
@@ -124,17 +124,17 @@ export default function SidebarMenu() {
               )}
 
               {/* أيقونة */}
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0, width: isExpanded ? "auto" : "100%",
-                position: "relative",
-              }}>
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0, width: isMobile || isExpanded ? "auto" : "100%",
+                  position: "relative",
+                }}>
                 <motion.div
                   whileHover={{ scale: 1.15 }}
                   transition={{ type: "spring", stiffness: 300 }}
                   style={{ display: "flex", alignItems: "center" }}
                 >
-                  <item.icon size={isExpanded ? 17 : 18} strokeWidth={isActive ? 2.2 : 1.8} />
+                  <item.icon size={isMobile || isExpanded ? 17 : 18} strokeWidth={isActive ? 2.2 : 1.8} />
                 </motion.div>
                 {/* توهج خلف الأيقونة النشطة */}
                 {isActive && (
@@ -149,11 +149,11 @@ export default function SidebarMenu() {
                 )}
               </div>
 
-              {/* النص — يظهر فقط في الوضع الموسع */}
+              {/* النص — يظهر بجانب الأيقونة */}
               <motion.span
                 animate={{
-                  opacity: isExpanded ? 1 : 0,
-                  width: isExpanded ? "auto" : 0,
+                  opacity: isMobile || isExpanded ? 1 : 0,
+                  width: isMobile || isExpanded ? "auto" : 0,
                 }}
                 transition={{ duration: 0.2 }}
                 style={{
@@ -174,8 +174,8 @@ export default function SidebarMenu() {
                     background: item.color,
                     boxShadow: `0 0 10px ${item.color}`,
                     flexShrink: 0,
-                    marginRight: isExpanded ? "0" : "auto",
-                    position: isExpanded ? "static" : "absolute",
+                    marginRight: isMobile || isExpanded ? "0" : "auto",
+                    position: isMobile || isExpanded ? "static" : "absolute",
                     right: "5px",
                   }}
                 />

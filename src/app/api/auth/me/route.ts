@@ -20,6 +20,7 @@ export const GET = withErrorHandler(async function GET() {
     select: {
       id: true, email: true, name: true, role: true, level: true,
       webAuthnEnabled: true, managementLevel: true, status: true,
+      lastLoginAt: true, createdAt: true,
     },
   });
 
@@ -35,6 +36,8 @@ export const GET = withErrorHandler(async function GET() {
       level: user.level,
       webAuthnEnabled: user.webAuthnEnabled,
       managementLevel: user.managementLevel || null,
+      lastLoginAt: user.lastLoginAt?.toISOString() || null,
+      createdAt: user.createdAt.toISOString(),
     },
   }), 15);
 });

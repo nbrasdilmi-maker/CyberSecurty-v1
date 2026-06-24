@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 interface Props {
   userName: string;
   userLevel: string;
+  lastLoginAt?: string | null;
+  createdAt?: string;
 }
 
 const glassStyle: React.CSSProperties = {
@@ -23,24 +25,28 @@ const getLevelLabel = (l: string) =>
     LEVEL_4: "المستوى الرابع",
   })[l] || l;
 
-const LaptopIllustration = () => (
-  <svg width="140" height="100" viewBox="0 0 140 100" fill="none">
-    <rect x="10" y="5" width="120" height="72" rx="8" fill="rgba(18,199,255,0.08)" stroke="#12C7FF" strokeWidth="1.5" />
-    <rect x="18" y="12" width="104" height="45" rx="4" fill="rgba(0,0,0,0.3)" />
-    <rect x="22" y="16" width="30" height="4" rx="2" fill="#12C7FF" opacity="0.6" />
-    <rect x="22" y="24" width="50" height="3" rx="1.5" fill="rgba(255,255,255,0.15)" />
-    <rect x="22" y="30" width="40" height="3" rx="1.5" fill="rgba(255,255,255,0.15)" />
-    <rect x="22" y="36" width="45" height="3" rx="1.5" fill="rgba(255,255,255,0.15)" />
-    <rect x="60" y="16" width="40" height="4" rx="2" fill="#A855F7" opacity="0.5" />
-    <circle cx="90" cy="32" r="12" fill="rgba(18,199,255,0.1)" stroke="#12C7FF" strokeWidth="1" />
-    <path d="M86 32l3 3 5-5" stroke="#12C7FF" strokeWidth="1.5" strokeLinecap="round" />
-    <rect x="40" y="77" width="60" height="4" rx="2" fill="rgba(255,255,255,0.08)" />
-    <rect x="30" y="83" width="80" height="3" rx="1.5" fill="rgba(255,255,255,0.05)" />
-    <rect x="25" y="60" width="90" height="1" fill="rgba(18,199,255,0.2)" />
-  </svg>
-);
 
-export default function WelcomeHero({ userName, userLevel }: Props) {
+
+const formatLastLogin = (d: string) => {
+  const dt = new Date(d);
+  return dt.toLocaleDateString("ar-SA", {
+    day: "numeric", month: "long", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+};
+
+const formatMemberSince = (d: string) => {
+  const dt = new Date(d);
+  const now = new Date();
+  const months = (now.getFullYear() - dt.getFullYear()) * 12 + (now.getMonth() - dt.getMonth());
+  if (months < 1) return "شهر واحد";
+  if (months < 12) return `${months} أشهر`;
+  const years = Math.floor(months / 12);
+  const rem = months % 12;
+  return rem > 0 ? `${years} سنة و ${rem} أشهر` : `${years} سنوات`;
+};
+
+export default function WelcomeHero({ userName, userLevel, lastLoginAt, createdAt }: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -100,16 +106,13 @@ export default function WelcomeHero({ userName, userLevel }: Props) {
           </p>
           <div style={{ display: "flex", gap: "12px", marginTop: "8px", flexWrap: "wrap" }}>
             <span style={{ padding: "3px 12px", borderRadius: "20px", fontSize: "0.72rem", background: "rgba(18,199,255,0.08)", border: "1px solid rgba(18,199,255,0.15)", color: "#12C7FF", fontWeight: 600 }}>
-              ⏱ آخر دخول: منذ 30 دقيقة
+              ⏱ آخر دخول: {lastLoginAt ? formatLastLogin(lastLoginAt) : "—"}
             </span>
             <span style={{ padding: "3px 12px", borderRadius: "20px", fontSize: "0.72rem", background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.15)", color: "#A855F7", fontWeight: 600 }}>
-              🎓 عضو منذ: 6 أشهر
+              🎓 عضو منذ: {createdAt ? formatMemberSince(createdAt) : "—"}
             </span>
           </div>
         </div>
-      </div>
-      <div style={{ opacity: 0.85, zIndex: 1 }}>
-        <LaptopIllustration />
       </div>
       <div
         style={{

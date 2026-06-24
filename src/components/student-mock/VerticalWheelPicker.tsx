@@ -94,38 +94,69 @@ export default function VerticalWheelPicker({ items, onSelect, selected }: Props
         userSelect: "none",
       }}
     >
-      {/* Scroll indicator arrows */}
+      {/* Clickable up arrow */}
       {activeIdx > 0 && (
-        <div
+        <motion.button
+          whileHover={{ scale: 1.15, color: "rgba(0,180,255,1)" }}
+          whileTap={{ scale: 0.85 }}
+          onClick={(e) => { e.stopPropagation(); goUp(); }}
           style={{
             position: "absolute",
-            top: 6,
+            top: 4,
             left: "50%",
             transform: "translateX(-50%)",
-            zIndex: 5,
-            color: "rgba(0,180,255,0.5)",
-            fontSize: "0.7rem",
-            pointerEvents: "none",
+            zIndex: 10,
+            color: "rgba(0,180,255,0.6)",
+            fontSize: "1.1rem",
+            background: "rgba(0,0,0,0.3)",
+            border: "1px solid rgba(0,180,255,0.2)",
+            borderRadius: "50%",
+            width: 30,
+            height: 30,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            lineHeight: 1,
+            padding: 0,
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
           }}
         >
           ▲
-        </div>
+        </motion.button>
       )}
+      {/* Clickable down arrow */}
       {activeIdx < items.length - 1 && (
-        <div
+        <motion.button
+          whileHover={{ scale: 1.15, color: "rgba(0,180,255,1)" }}
+          whileTap={{ scale: 0.85 }}
+          onClick={(e) => { e.stopPropagation(); goDown(); }}
           style={{
             position: "absolute",
-            bottom: 6,
+            bottom: 4,
             left: "50%",
             transform: "translateX(-50%)",
-            zIndex: 5,
-            color: "rgba(0,180,255,0.5)",
-            fontSize: "0.7rem",
-            pointerEvents: "none",
+            zIndex: 10,
+            color: "rgba(0,180,255,0.6)",
+            fontSize: "1.1rem",
+            background: "rgba(0,0,0,0.3)",
+            border: "1px solid rgba(0,180,255,0.2)",
+            borderRadius: "50%",
+            width: 30,
+            height: 30,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            lineHeight: 1,
+            padding: 0,
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
           }}
         >
           ▼
-        </div>
+        </motion.button>
       )}
 
       <div

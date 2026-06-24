@@ -64,7 +64,7 @@ export default function StatsCards({ pending, evaluated, students, subjects, loa
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
+        gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
         gap: "15px",
         marginBottom: "25px",
       }}

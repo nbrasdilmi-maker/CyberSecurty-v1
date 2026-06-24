@@ -61,18 +61,43 @@ const defaultServerUsage = {
   storage: [34, 36, 35, 37, 36, 38, 37],
 };
 
+interface HealthData {
+  cpu: number;
+  ram: number;
+  storage: number;
+  activeUsers: number;
+}
+
+interface ActivityEntry {
+  icon: string;
+  text: string;
+  user: string;
+  time: string;
+}
+
 export default function AdminDashboard() {
   const user = useAuthStore((s) => s.user);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const [stats, setStats] = useState<StatItem[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [health, setHealth] = useState<HealthData>({ cpu: 0, ram: 0, storage: 0, activeUsers: 0 });
+  const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     try {
-      const [serverRes, auditRes] = await Promise.allSettled([
+      const [serverRes, auditRes, healthRes] = await Promise.allSettled([
         fetch("/api/server/stats"),
         fetch("/api/admin/audit-log"),
+        fetch("/api/server/health"),
       ]);
 
       const serverData = serverRes.status === "fulfilled" ? await serverRes.value.json() : null;
@@ -97,8 +122,20 @@ export default function AdminDashboard() {
           message: log.action || log.message || "",
           time: log.createdAt ? `منذ ${Math.floor((Date.now() - new Date(log.createdAt).getTime()) / 60000)} دقيقة` : "الآن",
         })));
+        const actionIcons: Record<string, string> = { LOGIN: "🔐", LOGOUT: "🚪", CREATE: "➕", UPDATE: "✏️", DELETE: "🗑️", UPLOAD: "📄", DOWNLOAD: "⬇️", EVALUATE: "📝", PUBLISH: "📢", FAILED_LOGIN: "⚠️", SUSPICIOUS_ACTIVITY: "🚨", LEVEL_PROMOTION: "⬆️", PROMOTED: "🏆", SEMESTER_SWITCH: "📅", PAGE_CONTROL_UPDATE: "⚙️" };
+        setActivities(logs.slice(0, 6).map((log: any) => ({
+          icon: actionIcons[log.action] || "🔔",
+          text: log.description || log.action || "",
+          user: log.user?.name || log.userId || "النظام",
+          time: log.createdAt ? `منذ ${Math.floor((Date.now() - new Date(log.createdAt).getTime()) / 60000)} دقيقة` : "الآن",
+        })));
       } else {
         setAlerts([{ level: "low", message: "جميع الأنظمة تعمل بشكل طبيعي", time: "الآن" }]);
+      }
+
+      const healthData = healthRes.status === "fulfilled" ? await healthRes.value.json() : null;
+      if (healthData?.success && healthData?.data) {
+        setHealth(healthData.data);
       }
     } catch {
       setAlerts([{ level: "low", message: "جميع الأنظمة تعمل بشكل طبيعي", time: "الآن" }]);
@@ -107,7 +144,7 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { loadData(); const interval = setInterval(loadData, 30000); return () => clearInterval(interval); }, [loadData]);
 
   const gap = "clamp(10px, 1.5vw, 16px)";
 
@@ -121,10 +158,10 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "24px 20px 60px" }}>
+    <div style={{ maxWidth: "1300px", margin: "0 auto", padding: isMobile ? "16px 10px 60px" : "24px 20px 60px", overflowX: "hidden" }}>
       {/* الصف 1: ترحيب + رادار التهديدات + حالة الأنظمة */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap, marginBottom: gap }}>
-        <WelcomeCard userName={user?.name || ""} />
+        <WelcomeCard userName={user?.name || ""} compact={isMobile} />
         <div style={{ ...glassCard, display: "flex", justifyContent: "center", alignItems: "center" }}>
           <ThreatRadar />
         </div>
@@ -151,7 +188,7 @@ export default function AdminDashboard() {
       {/* الصف 4: استخدام الخادم + النشاطات */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap, marginBottom: gap }}>
         <div style={glassCard}><ServerUsageChart data={defaultServerUsage} /></div>
-        <div style={glassCard}><ActivityTimeline /></div>
+        <div style={glassCard}><ActivityTimeline initialActivities={activities} /></div>
       </div>
 
       {/* الصف 5: مؤشرات الخادم + المستخدمون النشطون */}
@@ -159,15 +196,19 @@ export default function AdminDashboard() {
         <div style={glassCard}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", marginBottom: "6px" }}>
             <h3 style={{ fontSize: "clamp(0.7rem, 1.2vw, 0.78rem)", fontWeight: 700, color: "#00e5ff", margin: 0 }}>📊 مؤشرات الخادم</h3>
-            <RefreshIndicator />
+            <RefreshIndicator onRefresh={loadData} />
           </div>
-          <Gauges />
+          <Gauges data={[
+            { label: "المعالج", value: health.cpu, color: "#00e5ff", icon: "⚡" },
+            { label: "الذاكرة", value: health.ram, color: "#a855f7", icon: "🧠" },
+            { label: "التخزين", value: health.storage, color: "#39ff14", icon: "💾" },
+          ]} />
         </div>
         <div style={{ ...glassCard, display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <div style={{ textAlign: "center", padding: "8px" }}>
             <div style={{ fontSize: "0.9rem", color: "#8b949e", marginBottom: "3px" }}>🌐</div>
             <div style={{ fontSize: "clamp(0.65rem, 1vw, 0.7rem)", color: "#8b949e", fontWeight: 600, marginBottom: "6px" }}>المستخدمون النشطون</div>
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.8 }} style={{ fontSize: "clamp(1.4rem, 3vw, 1.8rem)", fontWeight: 800, color: "#39ff14", lineHeight: 1 }}>{Math.floor(Math.random() * 10) + 3}</motion.div>
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.8 }} style={{ fontSize: "clamp(1.4rem, 3vw, 1.8rem)", fontWeight: 800, color: "#39ff14", lineHeight: 1 }}>{health.activeUsers}</motion.div>
             <div style={{ fontSize: "clamp(0.55rem, 0.8vw, 0.6rem)", color: "#5a6a7a", marginTop: "3px" }}>متصل الآن</div>
           </div>
         </div>
