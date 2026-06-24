@@ -3,16 +3,17 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import Sidebar from "@/components/layout/Sidebar";
 import { useToast } from "@/components/ui/Toast";
-import PageTransition from "@/components/layout/PageTransition";
 import Pagination from "@/components/ui/Pagination";
 import { usePagination } from "@/hooks/usePagination";
 import { useAuthStore } from "@/store/authStore";
 import { csrfFetch } from "@/lib/csrfClient";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
+import WelcomeCard from "@/components/teacher/WelcomeCard";
+import QuickShortcuts from "@/components/teacher/QuickShortcuts";
+import StatsCards from "@/components/teacher/StatsCards";
+import TabsBar from "@/components/teacher/TabsBar";
+import EvaluationModal from "@/components/teacher/EvaluationModal";
 
 // ==================== الأنواع ====================
 interface Subject {
@@ -119,38 +120,7 @@ const ReEvalIcon = () => (
   </svg>
 );
 
-const CloseIcon = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
 
-const LogoutIcon = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-    <polyline points="16 17 21 12 16 7" />
-    <line x1="21" y1="12" x2="9" y2="12" />
-  </svg>
-);
 
 // ==================== المكوّن الرئيسي ====================
 export default function TeacherDashboard() {
@@ -241,23 +211,9 @@ export default function TeacherDashboard() {
     }
   }, [historyPag.page, historyPag.limit]);
 
-  // ==================== تحميل عدد الطلاب ====================
-  const loadStudentsCount = useCallback(async () => {
-    try {
-      const res = await fetch(
-        `/api/admin/users?level=${userLevel}&role=STUDENT&limit=1`,
-      );
-      const data = await res.json();
-      if (data.success)
-        setStats((prev) => ({ ...prev, students: data.total || 0 }));
-    } catch {
-      /* صامت */
-    }
-  }, [userLevel]);
-
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadPending(), loadHistory(), loadStudentsCount()]).finally(
+    Promise.all([loadPending(), loadHistory()]).finally(
       () => setLoading(false),
     );
   }, []);
@@ -272,8 +228,8 @@ export default function TeacherDashboard() {
   // ==================== تقييم تكليف ====================
   const handleEvaluate = async () => {
     if (!evalModal) return;
-    const grade = parseInt(evalGrade);
-    if (isNaN(grade) || grade < 0 || grade > 100) {
+    const grade = evalGrade.trim() ? parseInt(evalGrade) : null;
+    if (grade !== null && (isNaN(grade) || grade < 0 || grade > 100)) {
       setEvalError("الدرجة يجب أن تكون بين 0 و 100");
       return;
     }
@@ -297,7 +253,6 @@ export default function TeacherDashboard() {
         setEvalFeedback("");
         loadPending();
         loadHistory();
-        loadStudentsCount();
       } else {
         setEvalError(data.message || "فشل التقييم");
       }
@@ -329,6 +284,26 @@ export default function TeacherDashboard() {
     }
   };
 
+  // ==================== تحميل ملف ====================
+  const downloadFile = async (item: AssignmentItem) => {
+    if (!item.fileUrl) return;
+    try {
+      const res = await fetch(item.fileUrl);
+      const blob = await res.blob();
+      const ext = item.fileName?.split(".").pop() || "";
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${item.student.name}-${item.fileName || `file.${ext}`}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(item.fileUrl, "_blank");
+    }
+  };
+
   // ==================== تحميل جميع الملفات ====================
   const downloadAll = () => {
     const files = pending.filter((a) => a.fileUrl);
@@ -337,9 +312,7 @@ export default function TeacherDashboard() {
       return;
     }
     files.forEach((a, i) => {
-      setTimeout(() => {
-        if (a.fileUrl) window.open(a.fileUrl, "_blank");
-      }, i * 500);
+      setTimeout(() => downloadFile(a), i * 500);
     });
     showToast(`📥 جاري تحميل ${files.length} ملف`, "info");
   };
@@ -387,13 +360,6 @@ export default function TeacherDashboard() {
       month: "short",
       day: "numeric",
     });
-  const getLevelLabel = (l: string) =>
-    ({
-      LEVEL_1: "المستوى الأول",
-      LEVEL_2: "المستوى الثاني",
-      LEVEL_3: "المستوى الثالث",
-      LEVEL_4: "المستوى الرابع",
-    })[l] || l;
 
   // ==================== التنسيقات ====================
   const glassStyle: React.CSSProperties = {
@@ -404,17 +370,7 @@ export default function TeacherDashboard() {
     borderRadius: "20px",
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "12px 16px",
-    background: "rgba(0, 0, 0, 0.5)",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
-    borderRadius: "12px",
-    color: "#e6edf3",
-    fontSize: "0.95rem",
-    fontFamily: "'Cairo', sans-serif",
-    outline: "none",
-  };
+
 
   // ==================== الواجهة ====================
   return (
@@ -426,301 +382,44 @@ export default function TeacherDashboard() {
         color: "#fff",
       }}
     >
-      <Header />
-      <Sidebar />
-      <PageTransition>
-        <main
+      <main
           style={{
             maxWidth: "1300px",
             margin: "0 auto",
-            padding: "100px 20px 60px",
+            padding: "24px 20px 60px",
           }}
         >
-          {/* ========== الهيدر ========== */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{
-              ...glassStyle,
-              padding: "20px 30px",
-              marginBottom: "25px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: "15px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-              <div
-                style={{
-                  width: "50px",
-                  height: "50px",
-                  borderRadius: "50%",
-                  background: "rgba(191,90,242,0.2)",
-                  border: "2px solid #bf5af2",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.4rem",
-                  fontWeight: 800,
-                  color: "#bf5af2",
-                }}
-              >
-                {userName.charAt(0)}
-              </div>
-              <div>
-                <h2
-                  style={{
-                    color: "#00e5ff",
-                    fontSize: "clamp(1.1rem, 3vw, 1.5rem)",
-                    fontWeight: 800,
-                    margin: 0,
-                  }}
-                >
-                  👨‍🏫 مرحباً، {userName}
-                </h2>
-                <p
-                  style={{
-                    color: "#8b949e",
-                    fontSize: "0.85rem",
-                    margin: "4px 0 0",
-                  }}
-                >
-                  معلم - {getLevelLabel(userLevel)}
-                </p>
-              </div>
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLogout}
-              style={{
-                padding: "10px 20px",
-                borderRadius: "12px",
-                background: "rgba(248,81,73,0.1)",
-                border: "1px solid rgba(248,81,73,0.25)",
-                color: "#f85149",
-                cursor: "pointer",
-                fontFamily: "'Cairo', sans-serif",
-                fontWeight: 700,
-                fontSize: "0.9rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <LogoutIcon /> تسجيل الخروج
-            </motion.button>
-          </motion.div>
+          <WelcomeCard userName={userName} userLevel={userLevel} onLogout={handleLogout} />
 
-          {/* ========== اختصارات سريعة ========== */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-              gap: "12px",
-              marginBottom: "25px",
-            }}
-          >
-            {[
-              {
-                label: "الإشعارات",
-                icon: "🔔",
-                path: "/notifications",
-                color: "#ffca28",
-              },
-              {
-                label: "المكتبة",
-                icon: "📚",
-                path: "/library",
-                color: "#00e5ff",
-              },
-              {
-                label: "المحادثة",
-                icon: "💬",
-                path: "/chat",
-                color: "#39ff14",
-              },
-              {
-                label: "تعميم",
-                icon: "📢",
-                path: "/announcements/create",
-                color: "#ff3131",
-              },
-              {
-                label: "العمليات",
-                icon: "📋",
-                path: "/teacher/audit-log",
-                color: "#bf5af2",
-              },
-              {
-                label: "الإعدادات",
-                icon: "⚙️",
-                path: "/settings",
-                color: "#8b949e",
-              },
-            ].map((shortcut, i) => (
-              <motion.button
-                key={shortcut.path}
-                whileHover={{
-                  scale: 1.04,
-                  y: -3,
-                  boxShadow: `0 10px 30px ${shortcut.color}22`,
-                }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => router.push(shortcut.path)}
-                style={{
-                  ...glassStyle,
-                  padding: "18px 10px",
-                  textAlign: "center",
-                  cursor: "pointer",
-                  border: `1px solid ${shortcut.color}22`,
-                  transition: "all 0.3s",
-                }}
-              >
-                <div style={{ fontSize: "1.8rem", marginBottom: "6px" }}>
-                  {shortcut.icon}
-                </div>
-                <div
-                  style={{
-                    color: "#e6edf3",
-                    fontWeight: 600,
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  {shortcut.label}
-                </div>
-              </motion.button>
-            ))}
-          </motion.div>
+          <QuickShortcuts
+            shortcuts={[
+              { label: "الإشعارات", path: "/notifications", color: "#ffca28" },
+              { label: "المكتبة", path: "/library", color: "#00e5ff" },
+              { label: "المحادثة", path: "/chat", color: "#39ff14" },
+              { label: "تعميم", path: "/announcements/create", color: "#ff3131" },
+              { label: "العمليات", path: "/teacher/audit-log", color: "#bf5af2" },
+              { label: "الإعدادات", path: "/settings", color: "#8b949e" },
+            ]}
+            onNavigate={(path) => router.push(path)}
+          />
 
-          {/* ========== بطاقات إحصائية ========== */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "15px",
-              marginBottom: "25px",
-            }}
-          >
-            {[
-              {
-                label: "تكاليف واردة",
-                value: stats.pending,
-                icon: "📥",
-                color: "#ffca28",
-              },
-              {
-                label: "تم تقييمها",
-                value: stats.evaluated,
-                icon: "✅",
-                color: "#2ea043",
-              },
-              {
-                label: "طلاب المستوى",
-                value: stats.students,
-                icon: "👥",
-                color: "#00e5ff",
-              },
-              {
-                label: "المواد",
-                value: subjects.length,
-                icon: "📚",
-                color: "#bf5af2",
-              },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ scale: 1.03, y: -3 }}
-                style={{ ...glassStyle, padding: "22px", textAlign: "center" }}
-              >
-                <div style={{ fontSize: "2.2rem", marginBottom: "6px" }}>
-                  {stat.icon}
-                </div>
-                <div
-                  style={{
-                    fontSize: "1.8rem",
-                    fontWeight: 800,
-                    color: stat.color,
-                  }}
-                >
-                  {loading ? "..." : stat.value}
-                </div>
-                <div style={{ fontSize: "0.85rem", color: "#8b949e" }}>
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
+          <StatsCards
+            pending={stats.pending}
+            evaluated={stats.evaluated}
+            students={stats.students}
+            subjects={subjects.length}
+            loading={loading}
+          />
 
-          {/* ========== التبويبات ========== */}
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              marginBottom: "20px",
-              flexWrap: "wrap",
-            }}
-          >
-            {[
-              {
-                key: "inbox",
-                label: "📥 التكاليف الواردة",
-                count: stats.pending,
-              },
-              {
-                key: "history",
-                label: "📋 التقييمات السابقة",
-                count: stats.evaluated,
-              },
-              { key: "grades", label: "📊 توزيع الدرجات", count: 0 },
-            ].map((tab: any) => (
-              <motion.button
-                key={tab.key}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setActiveTab(tab.key as Tab)}
-                style={{
-                  padding: "12px 22px",
-                  borderRadius: "14px",
-                  border:
-                    activeTab === tab.key
-                      ? "1px solid #00e5ff"
-                      : "1px solid rgba(255,255,255,0.1)",
-                  background:
-                    activeTab === tab.key
-                      ? "rgba(0,229,255,0.12)"
-                      : "rgba(255,255,255,0.03)",
-                  color: activeTab === tab.key ? "#00e5ff" : "#8b949e",
-                  cursor: "pointer",
-                  fontFamily: "'Cairo', sans-serif",
-                  fontWeight: activeTab === tab.key ? 700 : 400,
-                  fontSize: "0.9rem",
-                  transition: "all 0.2s",
-                }}
-              >
-                {tab.label}{" "}
-                {tab.count > 0 && (
-                  <span
-                    style={{
-                      background: "rgba(255,202,40,0.2)",
-                      padding: "2px 8px",
-                      borderRadius: "10px",
-                      fontSize: "0.75rem",
-                      marginRight: "6px",
-                    }}
-                  >
-                    {tab.count}
-                  </span>
-                )}
-              </motion.button>
-            ))}
-          </div>
+          <TabsBar
+            tabs={[
+              { key: "inbox", label: "📥 التكاليف الواردة", badge: stats.pending },
+              { key: "history", label: "📋 التقييمات السابقة", badge: stats.evaluated },
+              { key: "grades", label: "📊 توزيع الدرجات" },
+            ]}
+            activeTab={activeTab}
+            onTabChange={(key) => setActiveTab(key as Tab)}
+          />
 
           {/* ========== محتوى التبويبات ========== */}
           <AnimatePresence mode="wait">
@@ -917,27 +616,27 @@ export default function TeacherDashboard() {
                                 >
                                   <EyeIcon /> فتح
                                 </motion.a>
-                                <motion.a
+                                <motion.button
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
-                                  href={item.fileUrl}
-                                  download
+                                  onClick={() => downloadFile(item)}
                                   style={{
                                     padding: "8px 14px",
                                     borderRadius: "10px",
-                                    textDecoration: "none",
-                                    background: "rgba(46,160,67,0.08)",
                                     border: "1px solid rgba(46,160,67,0.2)",
+                                    background: "rgba(46,160,67,0.08)",
                                     color: "#2ea043",
+                                    cursor: "pointer",
                                     fontWeight: 600,
                                     fontSize: "0.8rem",
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "6px",
+                                    fontFamily: "'Cairo', sans-serif",
                                   }}
                                 >
                                   <DownloadIcon /> تحميل
-                                </motion.a>
+                                </motion.button>
                               </>
                             )}
                             <motion.button
@@ -1170,27 +869,27 @@ export default function TeacherDashboard() {
                                 >
                                   <EyeIcon />
                                 </motion.a>
-                                <motion.a
+                                <motion.button
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
-                                  href={item.fileUrl}
-                                  download
+                                  onClick={() => downloadFile(item)}
                                   style={{
                                     padding: "8px 12px",
                                     borderRadius: "10px",
-                                    textDecoration: "none",
-                                    background: "rgba(46,160,67,0.08)",
                                     border: "1px solid rgba(46,160,67,0.2)",
+                                    background: "rgba(46,160,67,0.08)",
                                     color: "#2ea043",
+                                    cursor: "pointer",
                                     fontWeight: 600,
                                     fontSize: "0.8rem",
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "4px",
+                                    fontFamily: "'Cairo', sans-serif",
                                   }}
                                 >
                                   <DownloadIcon />
-                                </motion.a>
+                                </motion.button>
                               </>
                             )}
                             <motion.button
@@ -1331,193 +1030,18 @@ export default function TeacherDashboard() {
             )}
           </AnimatePresence>
         </main>
-      </PageTransition>
-      <Footer />
 
-      {/* ==================== نافذة التقييم ==================== */}
-      <AnimatePresence>
-        {evalModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 300,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "rgba(0,0,0,0.75)",
-              backdropFilter: "blur(10px)",
-              padding: "20px",
-            }}
-            onClick={() => setEvalModal(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0, y: 30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.8, opacity: 0, y: 30 }}
-              transition={{ type: "spring", damping: 20, stiffness: 200 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                ...glassStyle,
-                padding: "30px",
-                maxWidth: "480px",
-                width: "100%",
-                boxShadow: "0 0 60px rgba(0,229,255,0.2)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "20px",
-                }}
-              >
-                <h3
-                  style={{
-                    color: "#00e5ff",
-                    fontSize: "1.2rem",
-                    fontWeight: 800,
-                    margin: 0,
-                  }}
-                >
-                  📝 تقييم التكليف
-                </h3>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setEvalModal(null)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#8b949e",
-                    cursor: "pointer",
-                  }}
-                >
-                  <CloseIcon />
-                </motion.button>
-              </div>
-              <p
-                style={{
-                  color: "#8b949e",
-                  textAlign: "center",
-                  fontSize: "0.9rem",
-                  marginBottom: "20px",
-                }}
-              >
-                {evalModal.student.name} - {evalModal.subject.name}
-              </p>
-
-              {evalError && (
-                <div
-                  style={{
-                    textAlign: "center",
-                    color: "#f85149",
-                    background: "rgba(248,81,73,0.1)",
-                    border: "1px solid rgba(248,81,73,0.3)",
-                    padding: "10px",
-                    borderRadius: "10px",
-                    marginBottom: "16px",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  {evalError}
-                </div>
-              )}
-
-              <div style={{ marginBottom: "16px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    color: "#8b949e",
-                    marginBottom: "6px",
-                    textAlign: "center",
-                  }}
-                >
-                  الدرجة (0-100)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={evalGrade}
-                  onChange={(e) => setEvalGrade(e.target.value)}
-                  style={inputStyle}
-                  placeholder="مثال: 85"
-                />
-              </div>
-
-              <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    color: "#8b949e",
-                    marginBottom: "6px",
-                    textAlign: "center",
-                  }}
-                >
-                  ملاحظات (اختياري)
-                </label>
-                <textarea
-                  value={evalFeedback}
-                  onChange={(e) => setEvalFeedback(e.target.value)}
-                  style={{
-                    ...inputStyle,
-                    resize: "vertical",
-                    minHeight: "80px",
-                    textAlign: "right",
-                  }}
-                  placeholder="أضف ملاحظاتك هنا..."
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "10px" }}>
-                <button
-                  onClick={() => setEvalModal(null)}
-                  style={{
-                    flex: 1,
-                    padding: "12px",
-                    borderRadius: "10px",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    background: "transparent",
-                    color: "#8b949e",
-                    cursor: "pointer",
-                    fontFamily: "'Cairo', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  إلغاء
-                </button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleEvaluate}
-                  disabled={evalLoading}
-                  style={{
-                    flex: 1,
-                    padding: "12px",
-                    borderRadius: "10px",
-                    border: "none",
-                    background: "linear-gradient(135deg, #238636, #2ea043)",
-                    color: "#fff",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    fontFamily: "'Cairo', sans-serif",
-                    fontSize: "0.9rem",
-                    opacity: evalLoading ? 0.6 : 1,
-                  }}
-                >
-                  {evalLoading ? "⏳..." : "✅ حفظ التقييم"}
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <EvaluationModal
+        item={evalModal}
+        grade={evalGrade}
+        feedback={evalFeedback}
+        loading={evalLoading}
+        error={evalError}
+        onGradeChange={setEvalGrade}
+        onFeedbackChange={setEvalFeedback}
+        onSave={handleEvaluate}
+        onClose={() => setEvalModal(null)}
+      />
     </div>
   );
 }

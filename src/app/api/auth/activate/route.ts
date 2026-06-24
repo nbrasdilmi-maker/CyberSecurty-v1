@@ -12,7 +12,7 @@ const activateSchema = z
     code: z.string().min(4, "كود التفعيل غير صحيح"),
     password: z.string().min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل"),
     confirmPassword: z.string(),
-    username: z.string().min(3, "اسم المستخدم يجب أن يكون 3 أحرف على الأقل").max(50).regex(/^[a-zA-Z0-9._-]+$/, "اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط"),
+    username: z.string().min(3, "اسم المستخدم يجب أن يكون 3 أحرف على الأقل").max(50).regex(/^[a-zA-Z0-9._()-]+$/, "اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "كلمتا المرور غير متطابقتين",

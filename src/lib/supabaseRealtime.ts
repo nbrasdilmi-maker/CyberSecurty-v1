@@ -476,9 +476,9 @@ export function isUserOnline(userId: string): boolean {
   }
 }
 
-/** Returns true if this tab is authorized to play audio (visible + active tab) */
+/** Returns true if this tab is authorized to play audio */
 export function isAudioAuthorized(): boolean {
-  return typeof document !== "undefined" && document.visibilityState === "visible" && isActiveTab;
+  return typeof document !== "undefined" && isActiveTab;
 }
 
 /** Returns true if this tab is authorized to show toast notifications */

@@ -3,11 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import Sidebar from "@/components/layout/Sidebar";
 import { useToast } from "@/components/ui/Toast";
-import PageTransition from "@/components/layout/PageTransition";
 import { useAuthStore } from "@/store/authStore";
 import { csrfFetch } from "@/lib/csrfClient";
 
@@ -257,23 +253,13 @@ export default function GenerateSubjectsPage() {
   const totalPages = Math.ceil(totalLogs / 50);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "transparent",
-        fontFamily: "'Cairo', sans-serif",
-        color: "#fff",
-      }}
-    >
-      <Header />
-      <Sidebar />
-      <PageTransition>
-        <main
-          style={{
-            maxWidth: "1100px",
-            margin: "0 auto",
-            padding: "100px 20px 60px",
-          }}
+    <>
+      <main
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+          padding: "24px 20px 60px",
+        }}
         >
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -904,7 +890,6 @@ export default function GenerateSubjectsPage() {
             )}
           </motion.div>
         </main>
-      </PageTransition>
 
       <AnimatePresence>
         {deleteConfirm.show && (
@@ -989,7 +974,6 @@ export default function GenerateSubjectsPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      <Footer />
-    </div>
+    </>
   );
 }

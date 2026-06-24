@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import Sidebar from "@/components/layout/Sidebar";
-import PageTransition from "@/components/layout/PageTransition";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import { deriveStaticChannelName } from "@/lib/realtimeChannels";
 
@@ -212,19 +210,10 @@ export default function GuardianPage() {
   ];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "transparent",
-        fontFamily: "'Cairo', sans-serif",
-        color: "#fff",
-      }}
-    >
-      <Sidebar />
-      <PageTransition>
+    <>
         <main
           style={{
-            padding: "100px 16px 60px",
+            padding: "24px 16px 60px",
             maxWidth: "1300px",
             margin: "0 auto",
           }}
@@ -657,7 +646,6 @@ export default function GuardianPage() {
             </div>
           </motion.div>
         </main>
-      </PageTransition>
 
       {/* نافذة تفاصيل الحدث */}
       <AnimatePresence mode="wait">
@@ -867,6 +855,6 @@ export default function GuardianPage() {
           border-radius: 10px;
         }
       `}</style>
-    </div>
+    </>
   );
 }

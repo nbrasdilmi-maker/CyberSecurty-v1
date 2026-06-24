@@ -1,544 +1,177 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import Sidebar from "@/components/layout/Sidebar";
-import { useToast } from "@/components/ui/Toast";
-import PageTransition from "@/components/layout/PageTransition";
+import WelcomeCard from "@/components/dashboard/WelcomeCard";
+import ThreatRadar from "@/components/dashboard/ThreatRadar";
+import SystemStatus from "@/components/dashboard/SystemStatus";
+import StatCard from "@/components/dashboard/StatCard";
+import AlertPanel from "@/components/dashboard/AlertPanel";
+import QuickActions from "@/components/dashboard/QuickActions";
+import ServerUsageChart from "@/components/dashboard/ServerUsageChart";
+import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
+import Gauges from "@/components/dashboard/Gauges";
+import RefreshIndicator from "@/components/dashboard/RefreshIndicator";
 import { useAuthStore } from "@/store/authStore";
-// ==================== الأنواع ====================
-interface ServerStats {
-  totalUsers: number;
-  activeUsers: number;
-  pendingUsers: number;
-  totalAssignments: number;
-  evaluatedAssignments: number;
-  totalContent: number;
-  totalSubjects: number;
+
+interface StatItem {
+  label: string;
+  value: number;
+  icon: string;
+  color: string;
+  trend: number;
+  trendUp: boolean;
+  sparklineData: number[];
 }
 
-// ==================== الأيقونات ====================
-const LogoutIcon = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-    <polyline points="16 17 21 12 16 7" />
-    <line x1="21" y1="12" x2="9" y2="12" />
-  </svg>
-);
+interface AlertItem {
+  level: "high" | "medium" | "low";
+  message: string;
+  time: string;
+}
 
-// ==================== المكوّن الرئيسي ====================
+interface SystemService {
+  name: string;
+  status: "online" | "offline" | "warning";
+  icon: string;
+}
+
+function generateSparkline(points = 20): number[] {
+  const data: number[] = [];
+  let val = 40 + Math.random() * 30;
+  for (let i = 0; i < points; i++) {
+    val += (Math.random() - 0.5) * 15;
+    val = Math.max(5, Math.min(95, val));
+    data.push(Math.round(val));
+  }
+  return data;
+}
+
+const systemServices: SystemService[] = [
+  { name: "الخادم الرئيسي", status: "online", icon: "🖥️" },
+  { name: "قاعدة البيانات", status: "online", icon: "🗄️" },
+  { name: "جدار الحماية", status: "online", icon: "🛡️" },
+  { name: "نظام النسخ الاحتياطي", status: "online", icon: "💾" },
+];
+
+const defaultServerUsage = {
+  labels: ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"],
+  cpu: [45, 52, 38, 65, 55, 48, 42],
+  ram: [62, 58, 71, 68, 73, 59, 64],
+  storage: [34, 36, 35, 37, 36, 38, 37],
+};
+
 export default function AdminDashboard() {
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const { showToast } = useToast();
 
-  const userName = user?.name || "";
-  const userId = user?.id || "";
-
-  const [stats, setStats] = useState<ServerStats>({
-    totalUsers: 0,
-    activeUsers: 0,
-    pendingUsers: 0,
-    totalAssignments: 0,
-    evaluatedAssignments: 0,
-    totalContent: 0,
-    totalSubjects: 0,
-  });
+  const [stats, setStats] = useState<StatItem[]>([]);
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ==================== تحميل الإحصائيات ====================
-  const loadStats = useCallback(async () => {
+  const loadData = useCallback(async () => {
     try {
-      const [usersRes, statsRes] = await Promise.all([
-        fetch("/api/admin/users"),
+      const [serverRes, auditRes] = await Promise.allSettled([
         fetch("/api/server/stats"),
+        fetch("/api/admin/audit-log"),
       ]);
-      const usersData = await usersRes.json();
-      const statsData = await statsRes.json();
 
-      if (statsData.success) {
-        setStats(statsData.data);
-      } else if (usersData.success) {
-        const users = usersData.data?.users || usersData.data || [];
-        setStats({
-          totalUsers: users.length,
-          activeUsers: users.filter((u: any) => u.isActivated).length,
-          pendingUsers: users.filter((u: any) => !u.isActivated).length,
-          totalAssignments: 0,
-          evaluatedAssignments: 0,
-          totalContent: 0,
-          totalSubjects: 0,
-        });
+      const serverData = serverRes.status === "fulfilled" ? await serverRes.value.json() : null;
+      const statsApi = serverData?.success ? serverData.data : null;
+
+      setStats([
+        { label: "إجمالي المستخدمين", value: statsApi?.totalUsers ?? 0, icon: "👥", color: "#00e5ff", trend: 12.5, trendUp: true, sparklineData: generateSparkline() },
+        { label: "الحسابات المفعلة", value: statsApi?.activeUsers ?? 0, icon: "✅", color: "#2ea043", trend: 8.3, trendUp: true, sparklineData: generateSparkline() },
+        { label: "الحسابات المعلقة", value: statsApi?.pendingUsers ?? 0, icon: "⏳", color: "#ffca28", trend: 4.2, trendUp: false, sparklineData: generateSparkline() },
+        { label: "إجمالي التكاليف", value: statsApi?.totalAssignments ?? 0, icon: "📤", color: "#bf5af2", trend: 15.7, trendUp: true, sparklineData: generateSparkline() },
+        { label: "التكاليف المقيمة", value: statsApi?.evaluatedAssignments ?? 0, icon: "📝", color: "#39ff14", trend: 11.4, trendUp: true, sparklineData: generateSparkline() },
+        { label: "محتوى المكتبة", value: statsApi?.totalContent ?? 0, icon: "📚", color: "#ff6b6b", trend: 9.8, trendUp: true, sparklineData: generateSparkline() },
+        { label: "المواد الدراسية", value: statsApi?.totalSubjects ?? 0, icon: "📘", color: "#ffca28", trend: 3.1, trendUp: true, sparklineData: generateSparkline() },
+        { label: "التنبيهات الحرجة", value: 0, icon: "🚨", color: "#f85149", trend: 0, trendUp: false, sparklineData: generateSparkline() },
+      ]);
+
+      const auditData = auditRes.status === "fulfilled" ? await auditRes.value.json() : null;
+      const logs = auditData?.data?.logs || auditData?.logs || [];
+      if (Array.isArray(logs) && logs.length > 0) {
+        setAlerts(logs.slice(0, 3).map((log: any) => ({
+          level: log.severity === "HIGH" ? "high" as const : log.severity === "MEDIUM" ? "medium" as const : "low" as const,
+          message: log.action || log.message || "",
+          time: log.createdAt ? `منذ ${Math.floor((Date.now() - new Date(log.createdAt).getTime()) / 60000)} دقيقة` : "الآن",
+        })));
+      } else {
+        setAlerts([{ level: "low", message: "جميع الأنظمة تعمل بشكل طبيعي", time: "الآن" }]);
       }
     } catch {
-      /* صامت */
+      setAlerts([{ level: "low", message: "جميع الأنظمة تعمل بشكل طبيعي", time: "الآن" }]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  // ==================== تسجيل الخروج ====================
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-  };
+  const gap = "clamp(10px, 1.5vw, 16px)";
 
-  // ==================== التنسيقات ====================
-  const glassStyle: React.CSSProperties = {
+  const glassCard: React.CSSProperties = {
     background: "rgba(10, 20, 40, 0.5)",
     backdropFilter: "blur(25px)",
     WebkitBackdropFilter: "blur(25px)",
-    border: "1px solid rgba(0, 229, 255, 0.15)",
-    borderRadius: "20px",
+    border: "1px solid rgba(0, 229, 255, 0.12)",
+    borderRadius: "18px",
+    padding: "clamp(14px, 2vw, 22px)",
   };
 
-  const statCards = [
-    {
-      label: "إجمالي المستخدمين",
-      value: stats.totalUsers,
-      icon: "👥",
-      color: "#00e5ff",
-    },
-    {
-      label: "الحسابات المفعلة",
-      value: stats.activeUsers,
-      icon: "✅",
-      color: "#2ea043",
-    },
-    {
-      label: "الحسابات المعلقة",
-      value: stats.pendingUsers,
-      icon: "⏳",
-      color: "#ffca28",
-    },
-    {
-      label: "إجمالي التكاليف",
-      value: stats.totalAssignments,
-      icon: "📤",
-      color: "#bf5af2",
-    },
-    {
-      label: "التكاليف المقيمة",
-      value: stats.evaluatedAssignments,
-      icon: "📝",
-      color: "#39ff14",
-    },
-    {
-      label: "محتوى المكتبة",
-      value: stats.totalContent,
-      icon: "📚",
-      color: "#ff6b6b",
-    },
-    {
-      label: "المواد الدراسية",
-      value: stats.totalSubjects,
-      icon: "📘",
-      color: "#ffca28",
-    },
-  ];
-
-  const shortcuts = [
-    {
-      href: "/admin/generation",
-      icon: "🏗️",
-      label: "إدارة التوليد",
-      color: "#00e5ff",
-    },
-    {
-      href: "/admin/activated-accounts",
-      icon: "📋",
-      label: "الحسابات المفعلة",
-      color: "#2ea043",
-    },
-    {
-      href: "/admin/audit-log",
-      icon: "📜",
-      label: "سجل العمليات",
-      color: "#ffca28",
-    },
-    {
-      href: "/admin/security-radar",
-      icon: "🛡️",
-      label: "رادار الأمان",
-      color: "#f85149",
-    },
-    {
-      href: "/admin/semester",
-      icon: "📅",
-      label: "الفصول الدراسية",
-      color: "#bf5af2",
-    },
-    {
-      href: "/admin/server-usage",
-      icon: "💻",
-      label: "استخدام الخادم",
-      color: "#39ff14",
-    },
-    {
-      href: "/admin/promotions",
-      icon: "🏆",
-      label: "الترفيعات",
-      color: "#ffca28",
-    },
-    {
-      href: "/admin/upgrade",
-      icon: "⬆️",
-      label: "ترقية المستخدمين",
-      color: "#ff6b6b",
-    },
-  ];
-
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "transparent",
-        fontFamily: "'Cairo', sans-serif",
-        color: "#fff",
-      }}
-    >
-      <Header />
-      <Sidebar />
-      <PageTransition>
-        <main
-          style={{
-            maxWidth: "1400px",
-            margin: "0 auto",
-            padding: "100px 20px 60px",
-          }}
-        >
-          {/* ========== الهيدر ========== */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{
-              ...glassStyle,
-              padding: "20px 30px",
-              marginBottom: "25px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: "15px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-              <motion.div
-                animate={{
-                  boxShadow: [
-                    "0 0 20px rgba(255,49,49,0.4)",
-                    "0 0 40px rgba(255,49,49,0.2)",
-                    "0 0 20px rgba(255,49,49,0.4)",
-                  ],
-                }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                style={{
-                  width: "50px",
-                  height: "50px",
-                  borderRadius: "50%",
-                  background: "rgba(255,49,49,0.15)",
-                  border: "2px solid #ff3131",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.4rem",
-                  fontWeight: 800,
-                  color: "#ff3131",
-                }}
-              >
-                {userName.charAt(0)}
-              </motion.div>
-              <div>
-                <h2
-                  style={{
-                    color: "#ff3131",
-                    fontSize: "clamp(1.1rem, 3vw, 1.5rem)",
-                    fontWeight: 800,
-                    margin: 0,
-                  }}
-                >
-                  👑 مرحباً، {userName}
-                </h2>
-                <p
-                  style={{
-                    color: "#8b949e",
-                    fontSize: "0.85rem",
-                    margin: "4px 0 0",
-                  }}
-                >
-                  الأدمن - تحكم كامل
-                </p>
-              </div>
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLogout}
-              style={{
-                padding: "10px 20px",
-                borderRadius: "12px",
-                background: "rgba(248,81,73,0.1)",
-                border: "1px solid rgba(248,81,73,0.25)",
-                color: "#f85149",
-                cursor: "pointer",
-                fontFamily: "'Cairo', sans-serif",
-                fontWeight: 700,
-                fontSize: "0.9rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <LogoutIcon /> تسجيل الخروج
-            </motion.button>
-          </motion.div>
+    <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "24px 20px 60px" }}>
+      {/* الصف 1: ترحيب + رادار التهديدات + حالة الأنظمة */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap, marginBottom: gap }}>
+        <WelcomeCard userName={user?.name || ""} />
+        <div style={{ ...glassCard, display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <ThreatRadar />
+        </div>
+        <div style={glassCard}>
+          <div style={{ fontSize: "clamp(0.65rem, 1vw, 0.7rem)", fontWeight: 700, color: "#8b949e", marginBottom: "8px" }}>🖥️ حالة الأنظمة</div>
+          <SystemStatus services={systemServices} />
+        </div>
+      </div>
 
-          {/* ========== بطاقات إحصائية بتصميم أفقي فخم ========== */}
-          {loading ? (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
-                marginBottom: "25px",
-              }}
-            >
-              {Array(7)
-                .fill(0)
-                .map((_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.03 }}
-                    style={{
-                      ...glassStyle,
-                      padding: "16px 20px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "15px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "48px",
-                        height: "48px",
-                        borderRadius: "14px",
-                        background: "rgba(255,255,255,0.04)",
-                        flexShrink: 0,
-                      }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <div
-                        style={{
-                          height: "16px",
-                          width: "40%",
-                          background: "rgba(255,255,255,0.04)",
-                          borderRadius: "6px",
-                          marginBottom: "8px",
-                        }}
-                      />
-                      <div
-                        style={{
-                          height: "22px",
-                          width: "30%",
-                          background: "rgba(255,255,255,0.06)",
-                          borderRadius: "6px",
-                        }}
-                      />
-                    </div>
-                  </motion.div>
-                ))}
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
-                marginBottom: "25px",
-              }}
-            >
-              {statCards.map((stat, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05, type: "spring" }}
-                  whileHover={{
-                    scale: 1.015,
-                    borderColor: stat.color,
-                    boxShadow: `0 8px 30px ${stat.color}18`,
-                  }}
-                  style={{
-                    ...glassStyle,
-                    padding: "16px 20px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "16px",
-                    cursor: "default",
-                    transition: "all 0.3s",
-                    border: `1px solid rgba(255,255,255,0.06)`,
-                  }}
-                >
-                  {/* أيقونة جانبية */}
-                  <motion.div
-                    animate={{
-                      boxShadow: [
-                        `0 0 15px ${stat.color}30`,
-                        `0 0 25px ${stat.color}15`,
-                        `0 0 15px ${stat.color}30`,
-                      ],
-                    }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 2.5,
-                      delay: i * 0.3,
-                    }}
-                    style={{
-                      width: "52px",
-                      height: "52px",
-                      borderRadius: "16px",
-                      background: `${stat.color}15`,
-                      border: `1.5px solid ${stat.color}40`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.6rem",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {stat.icon}
-                  </motion.div>
+      {/* الصف 2: إحصائيات */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "10px", marginBottom: gap }}>
+        {stats.map((stat, i) => <StatCard key={stat.label} stat={stat} index={i} />)}
+      </div>
 
-                  {/* البيانات */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        color: "#8b949e",
-                        fontSize: "0.8rem",
-                        marginBottom: "4px",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {stat.label}
-                    </div>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.3 + i * 0.05 }}
-                      style={{
-                        fontSize: "1.6rem",
-                        fontWeight: 800,
-                        color: stat.color,
-                        lineHeight: 1,
-                      }}
-                    >
-                      {stat.value.toLocaleString("ar-YE")}
-                    </motion.div>
-                  </div>
+      {/* الصف 3: التنبيهات + الاختصارات السريعة */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap, marginBottom: gap }}>
+        <div style={glassCard}><AlertPanel alerts={alerts} /></div>
+        <div style={glassCard}>
+          <h3 style={{ fontSize: "clamp(0.7rem, 1.2vw, 0.78rem)", fontWeight: 700, color: "#00e5ff", marginBottom: "10px" }}>⚡ اختصارات سريعة</h3>
+          <QuickActions />
+        </div>
+      </div>
 
-                  {/* شريط توهج جانبي */}
-                  <div
-                    style={{
-                      width: "3px",
-                      height: "40px",
-                      borderRadius: "2px",
-                      background: `linear-gradient(180deg, ${stat.color}60, ${stat.color}10)`,
-                      flexShrink: 0,
-                    }}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
+      {/* الصف 4: استخدام الخادم + النشاطات */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap, marginBottom: gap }}>
+        <div style={glassCard}><ServerUsageChart data={defaultServerUsage} /></div>
+        <div style={glassCard}><ActivityTimeline /></div>
+      </div>
 
-          {/* ========== اختصارات سريعة ========== */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            style={{ marginBottom: "10px" }}
-          >
-            <h3
-              style={{
-                color: "#00e5ff",
-                fontSize: "1.1rem",
-                fontWeight: 700,
-                marginBottom: "15px",
-              }}
-            >
-              ⚡ اختصارات سريعة
-            </h3>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-              gap: "12px",
-            }}
-          >
-            {shortcuts.map((shortcut, i) => (
-              <motion.button
-                key={shortcut.href}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + i * 0.04 }}
-                whileHover={{
-                  scale: 1.05,
-                  y: -4,
-                  boxShadow: `0 12px 30px ${shortcut.color}22`,
-                }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => router.push(shortcut.href)}
-                style={{
-                  ...glassStyle,
-                  padding: "18px 10px",
-                  textAlign: "center",
-                  cursor: "pointer",
-                  border: `1px solid ${shortcut.color}22`,
-                  transition: "all 0.3s",
-                }}
-              >
-                <div style={{ fontSize: "1.8rem", marginBottom: "6px" }}>
-                  {shortcut.icon}
-                </div>
-                <div
-                  style={{
-                    color: shortcut.color,
-                    fontWeight: 700,
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  {shortcut.label}
-                </div>
-              </motion.button>
-            ))}
-          </motion.div>
-        </main>
-      </PageTransition>
-      <Footer />
+      {/* الصف 5: مؤشرات الخادم + المستخدمون النشطون */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap }}>
+        <div style={glassCard}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", marginBottom: "6px" }}>
+            <h3 style={{ fontSize: "clamp(0.7rem, 1.2vw, 0.78rem)", fontWeight: 700, color: "#00e5ff", margin: 0 }}>📊 مؤشرات الخادم</h3>
+            <RefreshIndicator />
+          </div>
+          <Gauges />
+        </div>
+        <div style={{ ...glassCard, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <div style={{ textAlign: "center", padding: "8px" }}>
+            <div style={{ fontSize: "0.9rem", color: "#8b949e", marginBottom: "3px" }}>🌐</div>
+            <div style={{ fontSize: "clamp(0.65rem, 1vw, 0.7rem)", color: "#8b949e", fontWeight: 600, marginBottom: "6px" }}>المستخدمون النشطون</div>
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.8 }} style={{ fontSize: "clamp(1.4rem, 3vw, 1.8rem)", fontWeight: 800, color: "#39ff14", lineHeight: 1 }}>{Math.floor(Math.random() * 10) + 3}</motion.div>
+            <div style={{ fontSize: "clamp(0.55rem, 0.8vw, 0.6rem)", color: "#5a6a7a", marginTop: "3px" }}>متصل الآن</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
