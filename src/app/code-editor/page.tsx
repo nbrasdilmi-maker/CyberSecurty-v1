@@ -3,8 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import Sidebar from "@/components/layout/Sidebar";
-import PageTransition from "@/components/layout/PageTransition";
+
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import { deriveStaticChannelName } from "@/lib/realtimeChannels";
@@ -432,19 +431,10 @@ export default function CodeEditorPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "transparent",
-        fontFamily: "'Cairo', 'Fira Code', monospace",
-        color: "#fff",
-      }}
-    >
-      <Sidebar />
-      <PageTransition>
+    <>
         <main
           style={{
-            padding: "90px 12px 50px",
+            padding: "24px 12px 50px",
             maxWidth: "1200px",
             margin: "0 auto",
             width: "100%",
@@ -907,7 +897,6 @@ export default function CodeEditorPage() {
             </div>
           )}
         </main>
-      </PageTransition>
 
       {/* نافذة رفع كتكليف */}
       <AnimatePresence mode="wait">
@@ -1466,6 +1455,6 @@ export default function CodeEditorPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }

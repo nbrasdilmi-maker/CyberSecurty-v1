@@ -2,9 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
-import PageTransition from "@/components/layout/PageTransition";
+
 import { useAuth } from "@/hooks/useAuth";
 import { csrfFetch } from "@/lib/csrfClient";
 import { useNotificationStore } from "@/store/notificationStore";
@@ -107,12 +105,9 @@ export default function NotificationsPage() {
         color: "#fff",
       }}
     >
-      <Header />
-      <Sidebar />
-      <PageTransition>
-        <main
+      <main
           style={{
-            padding: "100px 20px 60px",
+            padding: "24px 20px 60px",
             maxWidth: "900px",
             margin: "0 auto",
           }}
@@ -291,7 +286,6 @@ export default function NotificationsPage() {
             </div>
           )}
         </main>
-      </PageTransition>
     </div>
   );
 }

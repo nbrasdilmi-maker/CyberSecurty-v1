@@ -39,18 +39,13 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       );
     }
 
-    if (grade === undefined || grade === null || typeof grade !== "number") {
-      return NextResponse.json(
-        { success: false, message: "الدرجة مطلوبة ويجب أن تكون رقماً" },
-        { status: 400 },
-      );
-    }
-
-    if (grade < 0 || grade > 100) {
-      return NextResponse.json(
-        { success: false, message: "الدرجة يجب أن تكون بين 0 و 100" },
-        { status: 400 },
-      );
+    if (grade !== null && grade !== undefined) {
+      if (typeof grade !== "number" || grade < 0 || grade > 100) {
+        return NextResponse.json(
+          { success: false, message: "الدرجة يجب أن تكون بين 0 و 100" },
+          { status: 400 },
+        );
+      }
     }
 
     const assignment = await prisma.assignment.findUnique({
@@ -68,13 +63,6 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       );
     }
 
-    if (assignment.status !== "pending") {
-      return NextResponse.json(
-        { success: false, message: "التكليف تم تقييمه مسبقاً" },
-        { status: 409 },
-      );
-    }
-
     if (userRole === "TEACHER" && assignment.subject.teacherId !== userId) {
       return NextResponse.json(
         { success: false, message: "لست مدرس هذه المادة" },
@@ -85,7 +73,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     const updated = await prisma.assignment.update({
       where: { id: assignmentId },
       data: {
-        grade,
+        grade: grade ?? null,
         feedback: feedback || null,
         status: "evaluated",
         evaluatedAt: new Date(),
@@ -93,12 +81,13 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       },
     });
 
+    const gradeText = grade !== null && grade !== undefined ? `بمقدار ${grade} درجة` : "بدون درجة";
     const notification = await prisma.notification.create({
       data: {
         userId: assignment.studentId,
         type: "ASSIGNMENT_EVALUATED",
         title: "تم تقييم التكليف",
-        body: `تم تقييم تكليفك في مادة ${assignment.subject.name} بمقدار ${grade} درجة`,
+        body: `تم تقييم تكليفك في مادة ${assignment.subject.name} ${gradeText}`,
         linkUrl: "/student",
       },
     });
@@ -108,7 +97,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       id: notification.id,
       type: "ASSIGNMENT_EVALUATED",
       title: "تم تقييم التكليف",
-      body: `تم تقييم تكليفك في مادة ${assignment.subject.name} بمقدار ${grade} درجة`,
+      body: `تم تقييم تكليفك في مادة ${assignment.subject.name} ${gradeText}`,
       linkUrl: "/student",
     });
 
@@ -124,7 +113,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       const { sendPushToUsers } = await import("@/lib/pushNotifications");
       sendPushToUsers([assignment.studentId], {
         title: "✅ تم تقييم التكليف",
-        body: `تم تقييم تكليفك في ${assignment.subject.name} بمقدار ${grade} درجة`,
+        body: `تم تقييم تكليفك في ${assignment.subject.name} ${gradeText}`,
         data: { url: "/student" },
         sound: "/sounds/notification.mp3",
       }).catch(() => {});
@@ -136,7 +125,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
         userId,
         action: "EVALUATE",
         severity: "INFO",
-        description: `تقييم تكليف للطالب ${assignment.student.name} في مادة ${assignment.subject.name} بمقدار ${grade}`,
+        description: `تقييم تكليف للطالب ${assignment.student.name} في مادة ${assignment.subject.name} ${gradeText}`,
         level: assignment.subject.level,
       },
     });

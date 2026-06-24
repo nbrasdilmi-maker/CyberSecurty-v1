@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/Toast";
 import PageTransition from "@/components/layout/PageTransition";
-import FloatingBell from "@/components/ui/FloatingBell";
+
+import AppShell from "@/components/appshell/AppShell";
 import AnimationsProvider from "@/components/providers/AnimationsProvider";
 import UserActivityTracker from "@/components/layout/UserActivityTracker";
 import EffectsManager from "@/components/effects/EffectsManager";
@@ -59,9 +60,11 @@ export default function RootLayout({
             <AnimationsProvider>
               <UserActivityTracker />
               <PageGuardProvider>
-                <PageTransition>{children}</PageTransition>
+                <AppShell>
+                  <PageTransition>{children}</PageTransition>
+                </AppShell>
               </PageGuardProvider>
-              <FloatingBell />
+
             </AnimationsProvider>
           </ToastProvider>
         </div>

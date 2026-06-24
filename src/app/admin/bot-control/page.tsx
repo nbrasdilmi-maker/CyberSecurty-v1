@@ -3,11 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import Sidebar from "@/components/layout/Sidebar";
 import { useToast } from "@/components/ui/Toast";
-import PageTransition from "@/components/layout/PageTransition";
 import { useAuthStore } from "@/store/authStore";
 import { csrfFetch } from "@/lib/csrfClient";
 
@@ -218,11 +214,7 @@ export default function BotControlPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#010204]">
-      <Header />
-      <Sidebar />
-      <PageTransition>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16" style={{ paddingTop: "100px" }}>
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <button onClick={() => router.push("/admin")} className="p-2 rounded-lg hover:bg-white/5 transition-colors text-[#8b949e] hover:text-[#00e5ff]">
@@ -365,9 +357,6 @@ export default function BotControlPage() {
               </div>
             </>
           )}
-        </main>
-      </PageTransition>
-      <Footer />
-    </div>
+    </main>
   );
 }

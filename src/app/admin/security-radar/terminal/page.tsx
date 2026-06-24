@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import Sidebar from "@/components/layout/Sidebar";
-import PageTransition from "@/components/layout/PageTransition";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import { deriveStaticChannelName } from "@/lib/realtimeChannels";
@@ -213,19 +211,10 @@ export default function TerminalPage() {
   ];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "transparent",
-        fontFamily: "'Cairo', 'Fira Code', monospace",
-        color: "#fff",
-      }}
-    >
-      <Sidebar />
-      <PageTransition>
+    <>
         <main
           style={{
-            padding: "100px 16px 60px",
+            padding: "24px 16px 60px",
             maxWidth: "1200px",
             margin: "0 auto",
           }}
@@ -653,7 +642,6 @@ export default function TerminalPage() {
             </div>
           </motion.div>
         </main>
-      </PageTransition>
 
       {/* نافذة تفاصيل الخطأ */}
       <AnimatePresence>
@@ -849,6 +837,6 @@ export default function TerminalPage() {
           border-radius: 10px;
         }
       `}</style>
-    </div>
+    </>
   );
 }

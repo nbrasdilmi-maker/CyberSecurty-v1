@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "@/components/layout/Sidebar";
-import PageTransition from "@/components/layout/PageTransition";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import { deriveStaticChannelName } from "@/lib/realtimeChannels";
+import { csrfFetch } from "@/lib/csrfClient";
 
 interface SubjectItem {
   id: string;
@@ -109,7 +108,7 @@ export default function SemesterManagePage() {
     setActionLoading(true);
     setMessage("");
     try {
-      const res = await fetch("/api/semester/toggle", {
+      const res = await csrfFetch("/api/semester/toggle", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -127,7 +126,7 @@ export default function SemesterManagePage() {
         setShowDrawer(false);
         loadData();
       } else {
-        setMessage(`❌ ${data.error || "حدث خطأ"}`);
+        setMessage(`❌ ${data.message || data.error || "حدث خطأ"}`);
       }
     } catch {
       setMessage("❌ حدث خطأ في الاتصال");
@@ -137,19 +136,10 @@ export default function SemesterManagePage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "transparent",
-        fontFamily: "'Cairo', sans-serif",
-        color: "#fff",
-      }}
-    >
-      <Sidebar />
-      <PageTransition>
+    <>
         <div
           style={{
-            padding: "100px 12px 60px",
+            padding: "24px 12px 60px",
             maxWidth: "1000px",
             margin: "0 auto",
             width: "100%",
@@ -346,7 +336,6 @@ export default function SemesterManagePage() {
             </div>
           )}
         </div>
-      </PageTransition>
 
       {/* الدرج الجانبي */}
       {showDrawer && activeTerm && activeLevelData && (
@@ -562,6 +551,6 @@ export default function SemesterManagePage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
