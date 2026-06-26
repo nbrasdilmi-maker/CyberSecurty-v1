@@ -36,7 +36,8 @@ const pwaConfig = withPWA({
   dest: "public",
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
+  disable: process.env.DISABLE_PWA === "true",
+  importScripts: ["/push-sw.js"],
 });
 
 export default pwaConfig(nextConfig);

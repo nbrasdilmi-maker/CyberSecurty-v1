@@ -29,19 +29,6 @@ self.addEventListener("push", (event) => {
         tag = "grade";
       }
 
-      // Choose sound: caller's explicit sound > type-based default > fallback
-      const soundMap = {
-        NEW_MESSAGE: "/sounds/notification.mp3",
-        ASSIGNMENT_EVALUATED: "/sounds/notification.mp3",
-        NEW_ASSIGNMENT: "/sounds/notification.mp3",
-        GRADES_DISTRIBUTED: "/sounds/notification.mp3",
-        LEVEL_PROMOTED: "/sounds/notification.mp3",
-        NEW_ANNOUNCEMENT: "/sounds/alert.mp3",
-        NEW_CONTENT: "/sounds/alert.mp3",
-        ACCOUNT_MODIFIED: "/sounds/alert.mp3",
-      };
-      const sound = data.sound || soundMap[data.type] || "/sounds/notification.mp3";
-
       const options = {
         body: data.body || "",
         icon: data.icon || "/icons/android-chrome-192x192.png",
@@ -52,7 +39,6 @@ self.addEventListener("push", (event) => {
         requireInteraction: data.requireInteraction || false,
         tag,
         renotify: true,
-        sound,
       };
 
       return self.registration.showNotification(title, options);

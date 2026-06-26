@@ -7,12 +7,26 @@ const SALT_LENGTH = 16;
 const KEY_ITERATIONS = 100000;
 const KEY_LENGTH = 32;
 
+// ذاكرة تخزين مؤقت لمفاتيح PBKDF2 — لا تغير الخوارزمية ولا الأمان
+// تخزين المفتاح المشتق لكل salt لمنع إعادة الحساب لنفس salt
+const keyCache = new Map<string, Buffer>();
+const MAX_CACHE_SIZE = parseInt(process.env.PBKDF2_CACHE_SIZE || "500", 10);
+
 function getKey(salt: Buffer): Buffer {
   const key = process.env.ENCRYPTION_KEY;
   if (!key) {
     throw new Error("ENCRYPTION_KEY environment variable is required");
   }
-  return crypto.pbkdf2Sync(key, salt, KEY_ITERATIONS, KEY_LENGTH, "sha512");
+  const saltHex = salt.toString("hex");
+  const cached = keyCache.get(saltHex);
+  if (cached) return cached;
+  const derived = crypto.pbkdf2Sync(key, salt, KEY_ITERATIONS, KEY_LENGTH, "sha512");
+  if (keyCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = keyCache.keys().next().value;
+    if (firstKey) keyCache.delete(firstKey);
+  }
+  keyCache.set(saltHex, derived);
+  return derived;
 }
 
 export function encryptMessage(text: string): string {

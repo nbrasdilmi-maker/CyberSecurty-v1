@@ -88,7 +88,7 @@ export default function BellNotifications() {
   const processedIdsRef = useRef<Set<string>>(new Set());
   const processedIdTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const lastSoundTimeRef = useRef(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUnlockedRef = useRef(false);
   const prevConnectionRef = useRef<string>("disconnected");
   const reconnectCooldownRef = useRef(0);
   const MAX_PROCESSED_IDS = 500;
@@ -209,6 +209,43 @@ export default function BellNotifications() {
     return () => window.removeEventListener("focus", check);
   }, []);
 
+  useEffect(() => {
+    const tryUnlock = () => {
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        if (ctx.state === "running") {
+          ctx.close();
+          audioUnlockedRef.current = true;
+          return true;
+        }
+        if (ctx.state === "suspended") {
+          ctx.resume().then(() => {
+            ctx.close();
+            audioUnlockedRef.current = true;
+          }).catch(() => {});
+        }
+      } catch {
+        // AudioContext غير متوفر
+      }
+      return false;
+    };
+    tryUnlock();
+    const unlockOnInteraction = () => {
+      if (!audioUnlockedRef.current) tryUnlock();
+      document.removeEventListener("click", unlockOnInteraction);
+      document.removeEventListener("touchstart", unlockOnInteraction);
+      document.removeEventListener("keydown", unlockOnInteraction);
+    };
+    document.addEventListener("click", unlockOnInteraction);
+    document.addEventListener("touchstart", unlockOnInteraction);
+    document.addEventListener("keydown", unlockOnInteraction);
+    return () => {
+      document.removeEventListener("click", unlockOnInteraction);
+      document.removeEventListener("touchstart", unlockOnInteraction);
+      document.removeEventListener("keydown", unlockOnInteraction);
+    };
+  }, []);
+
   const { connectionState } = useSupabaseRealtime(
     `user-${userId}`,
     "notification",
@@ -244,7 +281,7 @@ export default function BellNotifications() {
         stormActiveRef.current = false;
       }
 
-      if (data.type !== "NEW_MESSAGE" || !data.id || !data.title || !data.body) {
+      if (data.type !== "NEW_MESSAGE" && (!data.id || !data.title || !data.body)) {
         scheduleNotificationRefresh();
       } else {
         setUnreadCount((prev) => prev + 1);
@@ -289,13 +326,9 @@ export default function BellNotifications() {
           lastSoundTimeRef.current = now;
           try {
             const soundPath = getNotificationSound(data.type || "");
-            if (!audioRef.current || (audioRef.current as any)._soundPath !== soundPath) {
-              audioRef.current = new Audio(soundPath);
-              (audioRef.current as any)._soundPath = soundPath;
-            }
-            audioRef.current.volume = 0.5;
-            audioRef.current.currentTime = 0;
-            const playPromise = audioRef.current.play();
+            const audio = new Audio(soundPath);
+            audio.volume = 0.5;
+            const playPromise = audio.play();
             if (playPromise) {
               playPromise
                 .then(() => {

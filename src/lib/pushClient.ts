@@ -10,7 +10,8 @@ export async function registerPushNotifications(): Promise<boolean> {
   }
 
   try {
-    const registration = await navigator.serviceWorker.register("/push-sw.js");
+    const r = await navigator.serviceWorker.getRegistration();
+    const registration = r || (await navigator.serviceWorker.register("/sw.js"));
     const subscription = await registration.pushManager.getSubscription();
 
     if (subscription) {

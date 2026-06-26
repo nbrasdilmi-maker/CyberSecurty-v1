@@ -173,8 +173,6 @@ export class MessageService {
       },
     });
 
-    prisma.user.update({ where: { id: senderId }, data: { lastSeenAt: new Date() } }).catch(() => {});
-
     return { message, isDuplicate: false };
   }
 
@@ -357,28 +355,17 @@ export class MessageService {
 
       const isInChatWithSender = isUserOnline(receiverId);
 
-      (async () => {
-        for (let attempt = 0; attempt < 3; attempt++) {
-          try {
-            await prisma.notification.create({
-              data: {
-                userId: receiverId,
-                type: "NEW_MESSAGE",
-                title: "رسالة جديدة",
-                body: `رسالة جديدة من ${sender.name}`,
-                linkUrl: "/chat",
-              },
-            });
-            return;
-          } catch (err) {
-            if (attempt < 2) {
-              await new Promise((r) => setTimeout(r, 1000));
-            } else {
-              console.error("[MessageService] فشل إنشاء إشعار بعد 3 محاولات:", err);
-            }
-          }
-        }
-      })();
+      prisma.notification.create({
+        data: {
+          userId: receiverId,
+          type: "NEW_MESSAGE",
+          title: "رسالة جديدة",
+          body: `رسالة جديدة من ${sender.name}`,
+          linkUrl: "/chat",
+        },
+      }).catch((err) => {
+        console.error("[MessageService] فشل إنشاء إشعار:", err);
+      });
 
       const receiverChan = getUserChannelName(receiverId);
       const senderChan = getUserChannelName(senderId);

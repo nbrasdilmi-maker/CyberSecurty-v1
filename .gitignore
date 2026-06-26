@@ -54,3 +54,17 @@ server-control.ps1
 server-control.bat
 
 CyberSecurty v11.bak/
+
+# backup files
+*.bak
+
+# Python report-generation scripts
+*.py
+scripts/*.py
+
+.env.development
+RULES.md
+PROGRESS.md
+tokenVersion-report.txt
+backups
+التقارير
