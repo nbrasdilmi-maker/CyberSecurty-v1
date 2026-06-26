@@ -37,11 +37,10 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       );
     }
 
-    await prisma.pushSubscription.upsert({
-      where: { endpoint },
-      update: { userId, authKey, p256dhKey },
-      create: { userId, endpoint, authKey, p256dhKey },
-    });
+    // حذف الاشتراك القديم لنفس endpoint (إن وجد) ثم إنشاء جديد
+    // (upsert لا يعمل لأن الـ unique constraint غير مطبق في DB الإنتاج)
+    await prisma.pushSubscription.deleteMany({ where: { endpoint } });
+    await prisma.pushSubscription.create({ data: { userId, endpoint, authKey, p256dhKey } });
 
     return NextResponse.json({
       success: true,
