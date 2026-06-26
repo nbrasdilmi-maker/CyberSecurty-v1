@@ -60,6 +60,9 @@ const csrfExemptPaths = [
   "/api/tig/verify-otp",
   "/api/tig/reset-password",
   "/api/diag/redis",
+  "/api/push/subscribe",
+  "/api/push/unsubscribe",
+  "/api/user/ping",
 ];
 
 const adminPaths = ["/admin"];

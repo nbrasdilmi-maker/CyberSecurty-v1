@@ -1,5 +1,7 @@
+import { csrfFetch } from "@/lib/csrfClient";
+
 async function getPublicKey(): Promise<string> {
-  const res = await fetch("/api/push/subscribe");
+  const res = await csrfFetch("/api/push/subscribe");
   const data = await res.json();
   return data.publicKey;
 }
@@ -16,7 +18,7 @@ export async function registerPushNotifications(): Promise<boolean> {
 
     if (subscription) {
       const subObj = subscription.toJSON();
-      await fetch("/api/push/subscribe", {
+      await csrfFetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -35,7 +37,7 @@ export async function registerPushNotifications(): Promise<boolean> {
     });
 
     const subObj = newSubscription.toJSON();
-    await fetch("/api/push/subscribe", {
+    await csrfFetch("/api/push/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -60,7 +62,7 @@ export async function unsubscribePushNotifications(): Promise<void> {
     if (subscription) {
       await subscription.unsubscribe();
     }
-    await fetch("/api/push/unsubscribe", { method: "DELETE" });
+    await csrfFetch("/api/push/unsubscribe", { method: "DELETE" });
     await registration.unregister();
   } catch {
     // best-effort, silent

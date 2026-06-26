@@ -301,6 +301,7 @@ export default function LoginPage() {
 
   const handleSkipWebAuthn = () => {
     setShowWebAuthnPrompt(false);
+    localStorage.setItem("webauthn_prompt_dismissed", "true");
     tryEnablePush();
     const storeRole = useAuthStore.getState().user?.role;
     redirectToDashboard(storeRole || "");
@@ -347,8 +348,9 @@ export default function LoginPage() {
         webAuthnEnabled: data.user?.webAuthnEnabled || false,
         managementLevel: data.user?.managementLevel || null,
       });
-      // إذا المستخدم ما عنده بصمة مفعلة، اسأله
-      if (data.user && !data.user.webAuthnEnabled) {
+      // إذا المستخدم ما عنده بصمة مفعلة، اسأله (مرة واحدة فقط)
+      const webauthnDismissed = typeof window !== "undefined" && localStorage.getItem("webauthn_prompt_dismissed") === "true";
+      if (data.user && !data.user.webAuthnEnabled && !webauthnDismissed) {
         setPendingUser({
           id: data.user.id,
           email: data.user.email,
