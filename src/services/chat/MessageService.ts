@@ -77,19 +77,29 @@ export class MessageService {
     const conversations: any[] = [];
     const seen = new Set<string>();
 
+    const uniqueItems: typeof items = [];
     for (const msg of items) {
       const other = msg.senderId === userId ? msg.receiver : msg.sender;
       const key = other.id;
       if (!seen.has(key)) {
         seen.add(key);
-        const body = msg.encrypted ? decryptMessage(msg.body) : msg.body;
-        conversations.push({
-          userId: other.id, name: other.name, role: other.role,
-          level: other.level, lastSeenAt: other.lastSeenAt,
-          lastLoginAt: other.lastLoginAt, lastMessage: body.slice(0, 50),
-          createdAt: msg.createdAt, isRead: msg.isRead, isSent: msg.senderId === userId,
-        });
+        uniqueItems.push(msg);
       }
+    }
+    const decryptedBodies = await Promise.all(
+      uniqueItems.map((msg) =>
+        msg.encrypted ? decryptMessage(msg.body) : Promise.resolve(msg.body)
+      )
+    );
+    for (let i = 0; i < uniqueItems.length; i++) {
+      const msg = uniqueItems[i];
+      const other = msg.senderId === userId ? msg.receiver : msg.sender;
+      conversations.push({
+        userId: other.id, name: other.name, role: other.role,
+        level: other.level, lastSeenAt: other.lastSeenAt,
+        lastLoginAt: other.lastLoginAt, lastMessage: decryptedBodies[i].slice(0, 50),
+        createdAt: msg.createdAt, isRead: msg.isRead, isSent: msg.senderId === userId,
+      });
     }
 
     return { conversations, nextCursor };
@@ -129,13 +139,20 @@ export class MessageService {
     const items = hasMore ? messages.slice(0, limit) : messages;
     const nextCursor = hasMore ? items[items.length - 1].id : null;
 
-    const decrypted = items.map((msg) => ({
-      ...msg,
-      body: msg.encrypted ? decryptMessage(msg.body) : msg.body,
-      replyTo: msg.replyTo
-        ? { ...msg.replyTo, body: msg.replyTo.body ? (() => { try { return decryptMessage(msg.replyTo!.body); } catch { return msg.replyTo!.body; } })() : "" }
-        : null,
-    }));
+    const decrypted = await Promise.all(
+      items.map(async (msg) => {
+        const body = msg.encrypted ? await decryptMessage(msg.body) : msg.body;
+        let replyBody: string | null = null;
+        if (msg.replyTo?.body) {
+          try { replyBody = await decryptMessage(msg.replyTo.body); } catch { replyBody = msg.replyTo.body; }
+        }
+        return {
+          ...msg,
+          body,
+          replyTo: msg.replyTo ? { ...msg.replyTo, body: replyBody || "" } : null,
+        };
+      })
+    );
 
     await prisma.message.updateMany({
       where: { receiverId: userId, senderId: otherUserId, isRead: false },
@@ -153,7 +170,7 @@ export class MessageService {
     idempotencyKey?: string,
   ) {
     const sanitized = sanitizeText(body);
-    const encryptedBody = encryptMessage(sanitized);
+    const encryptedBody = await encryptMessage(sanitized);
 
     if (!idempotencyKey) {
       idempotencyKey = `${senderId}-${Date.now()}-${crypto.randomUUID()}`;
@@ -190,7 +207,7 @@ export class MessageService {
     }
 
     const sanitized = sanitizeText(newBody);
-    const encryptedBody = encryptMessage(sanitized);
+    const encryptedBody = await encryptMessage(sanitized);
 
     await prisma.message.update({
       where: { id: messageId },

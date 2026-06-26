@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/store/authStore";
 import ChatArea from "@/components/chat/ChatArea";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
-import { trackPresence, getOnlineUsers, isAudioAuthorized, trackAudioPlayed, trackAudioSkippedHidden, trackAudioSkippedThrottle, trackAudioSkippedInactiveTab, trackAudioSkippedUnmounted } from "@/lib/supabaseRealtime";
+import { trackPresence, getOnlineUsers, trackAudioPlayed, trackAudioSkippedHidden, trackAudioSkippedThrottle, trackAudioSkippedUnmounted } from "@/lib/supabaseRealtime";
 import {
   traceMessageMutation,
   traceConversationMutation,
@@ -321,9 +321,6 @@ export default function ChatPage() {
             } else if (document.visibilityState !== "visible") {
               trackAudioSkippedHidden();
               traceAudio("AUDIO_SKIPPED_HIDDEN", "NEW_MESSAGE", { visibilityState: document.visibilityState, senderId: data.senderId, payloadId: data.id });
-            } else if (!isAudioAuthorized()) {
-              trackAudioSkippedInactiveTab();
-              traceAudio("AUDIO_SKIPPED_UNAUTHORIZED", "NEW_MESSAGE", { senderId: data.senderId, payloadId: data.id });
             } else {
               const now = Date.now();
               if (now - lastMessageSoundRef.current < 1000) {
