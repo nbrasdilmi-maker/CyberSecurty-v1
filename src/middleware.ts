@@ -39,6 +39,7 @@ const publicPaths = [
   "/api/tig/verify-otp",
   "/api/tig/reset-password",
   "/api/diag/redis",
+  "/api/diag/prisma",
 ];
 
 const csrfExemptPaths = [
@@ -79,7 +80,8 @@ function isPublicPath(pathname: string): boolean {
       pathname.startsWith("/api/tig/webhook") ||
       pathname.startsWith("/api/tig/verify-otp") ||
       pathname.startsWith("/api/tig/reset-password") ||
-      pathname.startsWith("/api/diag/redis"),
+      pathname.startsWith("/api/diag/redis") ||
+      pathname.startsWith("/api/diag/prisma"),
   );
 }
 
