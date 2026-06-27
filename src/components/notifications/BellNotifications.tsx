@@ -9,7 +9,7 @@ import { useNotificationStore } from "@/store/notificationStore";
 import { csrfFetch } from "@/lib/csrfClient";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import { trackNotifRefresh, trackNotifDedup, trackNotifReconnect, traceAudio, traceAudioForensic, traceLifecycle, traceAsyncRequest, traceAsyncResponse, traceRealtimeEvent, getLastRealtimeMutationAt } from "@/lib/realtimeDiagnostics";
-import { isAudioAuthorized, isToastAuthorized, trackAudioPlayed, trackAudioSkippedHidden, trackAudioSkippedThrottle, trackAudioSkippedInactiveTab, trackAudioSkippedUnmounted, trackAudioDuplicatePrevented } from "@/lib/supabaseRealtime";
+import { isAudioAuthorized, isToastAuthorized, trackAudioPlayed, trackAudioSkippedHidden, trackAudioSkippedThrottle, trackAudioSkippedUnmounted, trackAudioDuplicatePrevented } from "@/lib/supabaseRealtime";
 
 interface NotificationItem {
   id: string;
@@ -320,7 +320,6 @@ export default function BellNotifications() {
       if (!mountedRef.current) { trackAudioSkippedUnmounted(); shouldPlaySound = false; skipReason = "UNMOUNTED"; }
       else if (document.visibilityState !== "visible") { trackAudioSkippedHidden(); shouldPlaySound = false; skipReason = "HIDDEN"; }
       else if (pathname.startsWith("/chat")) { shouldPlaySound = false; skipReason = "ROUTE_CHAT"; }
-      else if (!isAudioAuthorized()) { trackAudioSkippedInactiveTab(); shouldPlaySound = false; skipReason = "UNAUTHORIZED"; }
       if (shouldPlaySound && !stormActiveRef.current) {
         if (now - lastSoundTimeRef.current >= 1000) {
           lastSoundTimeRef.current = now;
