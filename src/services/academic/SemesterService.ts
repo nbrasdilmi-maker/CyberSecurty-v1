@@ -174,8 +174,8 @@ export class SemesterService {
           requireInteraction: true,
         },
       );
-    } catch {
-      /* صامت */
+    } catch (err) {
+      console.error("[Semester] Push notification failed:", err instanceof Error ? err.message : String(err));
     }
 
     try {

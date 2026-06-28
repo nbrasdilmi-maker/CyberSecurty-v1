@@ -37,10 +37,13 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       );
     }
 
-    // حذف الاشتراكات القديمة للمستخدم (إن وجدت) ثم إنشاء جديد
-    // نستخدم userId لأن unique constraint على userId يسمح باشتراك واحد فقط لكل مستخدم
-    await prisma.pushSubscription.deleteMany({ where: { userId } });
-    await prisma.pushSubscription.create({ data: { userId, endpoint, authKey, p256dhKey } });
+    // استخدام upsert على endpoint لدعم أجهزة متعددة لكل مستخدم
+    // نفس الجهاز (نفس endpoint): تحديث المفاتيح. جهاز جديد: إضافة اشتراك جديد
+    await prisma.pushSubscription.upsert({
+      where: { endpoint },
+      update: { authKey, p256dhKey },
+      create: { userId, endpoint, authKey, p256dhKey },
+    });
 
     return NextResponse.json({
       success: true,

@@ -115,8 +115,8 @@ export class CodeEditorService {
           sound: "/sounds/alert.mp3",
           requireInteraction: true,
         });
-      } catch {
-        /* صامت */
+      } catch (err) {
+        console.error("[CodeEditor] Push notification failed:", err instanceof Error ? err.message : String(err));
       }
     }
   }

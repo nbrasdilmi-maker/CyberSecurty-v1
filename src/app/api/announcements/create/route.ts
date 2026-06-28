@@ -96,8 +96,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
             requireInteraction: true,
           },
         );
-      } catch {
-        /* صامت */
+      } catch (err) {
+        console.error("[Announcements] Push notification failed:", err instanceof Error ? err.message : String(err));
       }
 
       // إشعار لحظي لجميع مستخدمي المستوى دفعة واحدة

@@ -111,14 +111,14 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     // إرسال Push Notification مع صوت
     try {
       const { sendPushToUsers } = await import("@/lib/pushNotifications");
-      sendPushToUsers([assignment.studentId], {
+      await sendPushToUsers([assignment.studentId], {
         title: "✅ تم تقييم التكليف",
         body: `تم تقييم تكليفك في ${assignment.subject.name} ${gradeText}`,
         data: { url: "/student" },
         sound: "/sounds/notification.mp3",
-      }).catch(() => {});
+      });
     } catch (pushError) {
-      console.error("Failed to send evaluation push notification:", pushError);
+      console.error("[Evaluate] Push notification failed:", pushError instanceof Error ? pushError.message : String(pushError));
     }
     await prisma.auditLog.create({
       data: {

@@ -8,26 +8,45 @@ async function getPublicKey(): Promise<string> {
 
 export async function registerPushNotifications(): Promise<boolean> {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    console.warn("[PushClient] Push not supported in this browser");
     return false;
+  }
+
+  if (Notification.permission === "denied") {
+    console.warn("[PushClient] Push permission denied by user");
+    return false;
+  }
+
+  if (Notification.permission === "default") {
+    const result = await Notification.requestPermission();
+    if (result !== "granted") {
+      console.warn("[PushClient] Push permission not granted:", result);
+      return false;
+    }
   }
 
   try {
     const r = await navigator.serviceWorker.getRegistration();
     const registration = r || (await navigator.serviceWorker.register("/sw.js"));
-    const subscription = await registration.pushManager.getSubscription();
 
-    if (subscription) {
-      const subObj = subscription.toJSON();
-      await csrfFetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          endpoint: subObj.endpoint,
-          authKey: subObj.keys?.auth || "",
-          p256dhKey: subObj.keys?.p256dh || "",
-        }),
-      });
-      return true;
+    const existingSubscription = await registration.pushManager.getSubscription();
+    if (existingSubscription) {
+      try {
+        const subObj = existingSubscription.toJSON();
+        await csrfFetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            endpoint: subObj.endpoint,
+            authKey: subObj.keys?.auth || "",
+            p256dhKey: subObj.keys?.p256dh || "",
+          }),
+        });
+        return true;
+      } catch (err) {
+        console.warn("[PushClient] Existing subscription POST failed, re-subscribing:", err);
+        await existingSubscription.unsubscribe().catch(() => {});
+      }
     }
 
     const publicKey = await getPublicKey();
@@ -48,7 +67,8 @@ export async function registerPushNotifications(): Promise<boolean> {
     });
 
     return true;
-  } catch {
+  } catch (err) {
+    console.error("[PushClient] Registration failed:", err instanceof Error ? err.message : String(err));
     return false;
   }
 }
@@ -64,8 +84,8 @@ export async function unsubscribePushNotifications(): Promise<void> {
     }
     await csrfFetch("/api/push/unsubscribe", { method: "DELETE" });
     await registration.unregister();
-  } catch {
-    // best-effort, silent
+  } catch (err) {
+    console.error("[PushClient] Unsubscribe failed:", err instanceof Error ? err.message : String(err));
   }
 }
 

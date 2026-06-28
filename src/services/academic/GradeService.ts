@@ -249,8 +249,8 @@ export class GradeService {
             sound: "/sounds/notification.mp3",
           },
         );
-      } catch {
-        /* صامت */
+      } catch (err) {
+        console.error("[Grades] Push notification failed (sendPushToUsers):", err instanceof Error ? err.message : String(err));
       }
     }
 
@@ -476,8 +476,8 @@ export class GradeService {
     try {
       const { sendPushNotification } = await import("@/lib/pushNotifications");
       await sendPushNotification(userId, "✅ اكتمل التحليل", `تم استخراج ${parsedStudents.length} طالب`, "/teacher/grades/analysis");
-    } catch {
-      /* صامت */
+    } catch (err) {
+      console.error("[Grades] Push notification failed (sendPushNotification):", err instanceof Error ? err.message : String(err));
     }
 
     return {

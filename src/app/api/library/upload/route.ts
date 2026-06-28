@@ -274,9 +274,9 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
           },
         );
       }
-    } catch {
-      // الإشعارات لا تمنع النشر
-    }
+      } catch (err) {
+        console.error("[Library/Upload] Push notification failed:", err instanceof Error ? err.message : String(err));
+      }
 
     return NextResponse.json({
       success: true,

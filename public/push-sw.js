@@ -1,48 +1,91 @@
 self.addEventListener("push", (event) => {
-  const data = event.data?.json() || {};
+  let data;
+  try {
+    data = event.data?.json() || {};
+  } catch (e) {
+    console.error("[SW Push] Invalid JSON payload:", e);
+    try {
+      const text = event.data?.text() || "";
+      data = { title: "", body: text.substring(0, 200) };
+    } catch (e2) {
+      console.error("[SW Push] Cannot read payload text:", e2);
+      return;
+    }
+  }
 
   const title = data.title || "سحابة الأمن السيبراني";
+  const notificationUrl = data.url || data.data?.url || "/";
+  const notificationTag = data.tag || (() => {
+    if (data.type === "NEW_MESSAGE") return "message";
+    if (data.type === "ASSIGNMENT_EVALUATED" || data.type === "NEW_ASSIGNMENT") return "assignment";
+    if (data.type === "GRADES_DISTRIBUTED" || data.type === "ANALYSIS_COMPLETED") return "grade";
+    return "general";
+  })();
 
-  // T2: Skip push if any app window is visible (avoids toast+push dual delivery)
-  const shouldSkip = clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-    for (const client of clientList) {
-      if (client.visibilityState === "visible" || client.focused) {
-        return true;
+  const visibilityCheck = self.clients.matchAll({ type: "window", includeUncontrolled: true })
+    .then((clientList) => {
+      let anyVisible = false;
+      for (const client of clientList) {
+        if (client.visibilityState === "visible" || client.focused) {
+          anyVisible = true;
+          if (client.url && notificationUrl && client.url.includes(notificationUrl)) {
+            return { shouldSkip: true, reason: "same page already visible" };
+          }
+        }
       }
-    }
-    return false;
-  });
+      if (anyVisible) {
+        return { shouldSkip: false, reason: "visible but different page" };
+      }
+      return { shouldSkip: false, reason: "no visible windows" };
+    })
+    .catch((err) => {
+      console.error("[SW Push] clients.matchAll error:", err);
+      return { shouldSkip: false, reason: "matchAll error fallback" };
+    });
 
   event.waitUntil(
-    shouldSkip.then((skip) => {
-      if (skip) return;
-
-      // T7: Dynamic tags so related notifications group and different types don't overwrite
-      let tag = "general";
-      if (data.tag) {
-        tag = data.tag;
-      } else if (data.type === "NEW_MESSAGE") {
-        tag = "message";
-      } else if (data.type === "ASSIGNMENT_EVALUATED" || data.type === "NEW_ASSIGNMENT") {
-        tag = "assignment";
-      } else if (data.type === "GRADES_DISTRIBUTED" || data.type === "ANALYSIS_COMPLETED") {
-        tag = "grade";
-      }
+    visibilityCheck.then(({ shouldSkip, reason }) => {
+      if (shouldSkip) return;
+      console.log("[SW Push] showing notification, reason:", reason);
 
       const options = {
         body: data.body || "",
         icon: data.icon || "/icons/android-chrome-192x192.png",
         badge: data.badge || "/icons/favicon-32x32.png",
-        data: { url: data.url || data.data?.url || "/" },
+        data: { url: notificationUrl },
         vibrate: [200, 100, 200],
         silent: false,
         requireInteraction: data.requireInteraction || false,
-        tag,
+        tag: notificationTag,
         renotify: true,
       };
 
-      return self.registration.showNotification(title, options);
+      return self.registration.showNotification(title, options)
+        .catch((err) => {
+          console.error("[SW Push] showNotification failed:", err);
+        });
     }),
+  );
+});
+
+self.addEventListener("pushsubscriptionchange", (event) => {
+  console.log("[SW Push] pushsubscriptionchange fired, re-subscribing");
+  event.waitUntil(
+    self.registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: event.oldSubscription?.options?.applicationServerKey })
+      .then((newSubscription) => {
+        console.log("[SW Push] re-subscribed with new endpoint");
+        return fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscription: newSubscription.toJSON() }),
+        });
+      })
+      .then((res) => {
+        if (!res.ok) console.error("[SW Push] re-subscribe POST failed:", res.status, res.statusText);
+      })
+      .catch((err) => {
+        console.error("[SW Push] re-subscribe failed:", err);
+      })
   );
 });
 
@@ -50,17 +93,19 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url || "/";
   event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
+    self.clients.matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
         for (const client of clientList) {
-          if (client.url === url && "focus" in client) {
+          if (client.url && client.url.includes(url) && "focus" in client) {
             return client.focus();
           }
         }
-        if (clients.openWindow) {
-          return clients.openWindow(url);
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(url);
         }
+      })
+      .catch((err) => {
+        console.error("[SW Push] notificationclick error:", err);
       }),
   );
 });

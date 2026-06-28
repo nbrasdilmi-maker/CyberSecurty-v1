@@ -159,6 +159,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
         title: "تكليف جديد",
         body: `تم استلام تكليف جديد في مادة ${subject.name}`,
         data: { type: "assignment" },
+      }).catch((err) => {
+        console.error("[Assignments/Upload] Push notification failed:", err instanceof Error ? err.message : String(err));
       });
     }
 
