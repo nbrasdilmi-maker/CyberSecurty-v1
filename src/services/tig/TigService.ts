@@ -19,28 +19,6 @@ function generateTigCode(): string {
 export class TigService {
   // ==================== Binding ====================
 
-  async getDailyResetCount(userId: string): Promise<number> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const count = await prisma.auditLog.count({
-      where: {
-        userId,
-        action: "UPDATE",
-        description: "تم تغيير كلمة المرور عبر Telegram Bot",
-        createdAt: { gte: today },
-      },
-    });
-    return count;
-  }
-
-  async checkDailyResetLimit(userId: string): Promise<{ ok: boolean; remaining?: number }> {
-    const count = await this.getDailyResetCount(userId);
-    if (count >= DAILY_RESET_LIMIT) {
-      return { ok: false };
-    }
-    return { ok: true, remaining: DAILY_RESET_LIMIT - count };
-  }
-
   async getBinding(userId: string) {
     return prisma.telegramBinding.findUnique({ where: { userId } });
   }
