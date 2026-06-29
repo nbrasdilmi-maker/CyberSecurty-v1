@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/Toast";
 import { useAuthStore } from "@/store/authStore";
+import { useResponsive } from "@/hooks/useResponsive";
 import { csrfFetch } from "@/lib/csrfClient";
 
 const BackIcon = () => (
@@ -56,6 +57,7 @@ interface LogEntry {
 }
 
 export default function GenerateSubjectsPage() {
+  const { isMobile } = useResponsive();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const { showToast } = useToast();
@@ -254,11 +256,11 @@ export default function GenerateSubjectsPage() {
 
   return (
     <>
-      <main
+      <div
         style={{
           maxWidth: "1100px",
           margin: "0 auto",
-          padding: "24px 20px 60px",
+          padding: isMobile ? "16px 12px 16px" : "24px 20px 60px",
         }}
         >
           <motion.div
@@ -889,7 +891,7 @@ export default function GenerateSubjectsPage() {
               </>
             )}
           </motion.div>
-        </main>
+        </div>
 
       <AnimatePresence>
         {deleteConfirm.show && (

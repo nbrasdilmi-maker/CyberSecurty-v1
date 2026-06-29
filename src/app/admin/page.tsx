@@ -7,7 +7,6 @@ import ThreatRadar from "@/components/dashboard/ThreatRadar";
 import SystemStatus from "@/components/dashboard/SystemStatus";
 import StatCard from "@/components/dashboard/StatCard";
 import AlertPanel from "@/components/dashboard/AlertPanel";
-import QuickActions from "@/components/dashboard/QuickActions";
 import ServerUsageChart from "@/components/dashboard/ServerUsageChart";
 import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
 import Gauges from "@/components/dashboard/Gauges";
@@ -176,13 +175,9 @@ export default function AdminDashboard() {
         {stats.map((stat, i) => <StatCard key={stat.label} stat={stat} index={i} />)}
       </div>
 
-      {/* الصف 3: التنبيهات + الاختصارات السريعة */}
+      {/* الصف 3: التنبيهات */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap, marginBottom: gap }}>
         <div style={glassCard}><AlertPanel alerts={alerts} /></div>
-        <div style={glassCard}>
-          <h3 style={{ fontSize: "clamp(0.7rem, 1.2vw, 0.78rem)", fontWeight: 700, color: "#00e5ff", marginBottom: "10px" }}>⚡ اختصارات سريعة</h3>
-          <QuickActions />
-        </div>
       </div>
 
       {/* الصف 4: استخدام الخادم + النشاطات */}

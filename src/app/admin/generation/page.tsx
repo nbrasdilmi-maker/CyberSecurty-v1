@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/Toast";
 import { useAuthStore } from "@/store/authStore";
+import { useResponsive } from "@/hooks/useResponsive";
 
 const BackIcon = () => (
   <svg
@@ -31,6 +32,7 @@ const glassStyle: React.CSSProperties = {
 };
 
 export default function GenerationHub() {
+  const { isMobile, isTablet } = useResponsive();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const { showToast } = useToast();
@@ -73,11 +75,11 @@ export default function GenerationHub() {
 
   return (
     <>
-      <main
+      <div
         style={{
           maxWidth: "1000px",
           margin: "0 auto",
-          padding: "24px 20px 60px",
+          padding: isMobile ? "16px 12px 16px" : "24px 20px 60px",
         }}
         >
           {/* الهيدر */}
@@ -148,8 +150,8 @@ export default function GenerationHub() {
             style={{
               display: "flex",
               justifyContent: "center",
-              gap: "16px",
-              marginBottom: "30px",
+              gap: isMobile ? "10px" : "16px",
+              marginBottom: isMobile ? "20px" : "30px",
               flexWrap: "wrap",
             }}
           >
@@ -164,13 +166,13 @@ export default function GenerationHub() {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "10px",
-                    padding: "14px 28px",
+                    gap: "8px",
+                    padding: isMobile ? "10px 16px" : "14px 28px",
                     background: `linear-gradient(135deg, ${section.color}22, transparent)`,
                     border: `1px solid ${section.color}44`,
                     borderRadius: "14px",
                     color: section.color,
-                    fontSize: "1rem",
+                    fontSize: isMobile ? "0.85rem" : "1rem",
                     fontWeight: 700,
                     fontFamily: "'Cairo', sans-serif",
                     cursor: "pointer",
@@ -178,7 +180,7 @@ export default function GenerationHub() {
                     boxShadow: `0 0 20px ${section.color}11`,
                   }}
                 >
-                  <span style={{ fontSize: "1.8rem" }}>{section.icon}</span>
+                  <span style={{ fontSize: isMobile ? "1.3rem" : "1.8rem" }}>{section.icon}</span>
                   <span>{section.title}</span>
                   <span
                     style={{
@@ -206,7 +208,7 @@ export default function GenerationHub() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: "24px",
+              gap: isMobile ? "16px" : "24px",
             }}
           >
             {sections
@@ -226,7 +228,7 @@ export default function GenerationHub() {
                   onClick={() => router.push(section.href)}
                   style={{
                     ...glassStyle,
-                    padding: "35px 25px",
+                    padding: isMobile ? "24px 16px" : "35px 25px",
                     cursor: "pointer",
                     textAlign: "center",
                     border: `1px solid ${section.color}22`,
@@ -240,25 +242,25 @@ export default function GenerationHub() {
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
-                    style={{ fontSize: "3.5rem", marginBottom: "16px" }}
+                    style={{ fontSize: isMobile ? "2.2rem" : "3.5rem", marginBottom: isMobile ? "10px" : "16px" }}
                   >
                     {section.icon}
                   </motion.div>
                   <h3
                     style={{
-                      color: section.color,
-                      fontSize: "1.3rem",
-                      fontWeight: 800,
-                      marginBottom: "8px",
+                    color: section.color,
+                    fontSize: isMobile ? "1.1rem" : "1.3rem",
+                    fontWeight: 800,
+                    marginBottom: "8px",
                     }}
                   >
                     {section.title}
                   </h3>
                   <p
                     style={{
-                      color: "#8b949e",
-                      fontSize: "0.9rem",
-                      lineHeight: 1.6,
+                    color: "#8b949e",
+                    fontSize: isMobile ? "0.8rem" : "0.9rem",
+                    lineHeight: 1.6,
                     }}
                   >
                     {section.desc}
@@ -266,7 +268,7 @@ export default function GenerationHub() {
                 </motion.button>
               ))}
           </motion.div>
-        </main>
+        </div>
     </>
   );
 }
