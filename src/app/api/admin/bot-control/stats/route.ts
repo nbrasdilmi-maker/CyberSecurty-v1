@@ -19,14 +19,13 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const revokedBindings = await prisma.telegramBinding.count({ where: { status: "REVOKED" } });
 
   const recent = await prisma.telegramBinding.findMany({
-    where: { status: "ACTIVE" },
     orderBy: { verifiedAt: "desc" },
     take: 5,
   });
 
   const userIds = recent.map((b) => b.userId);
   const users = userIds.length > 0
-    ? await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true } })
+    ? await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true, level: true } })
     : [];
 
   const userMap = new Map(users.map((u) => [u.id, u]));
@@ -37,7 +36,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
     telegramUsername: b.telegramUsername,
     status: b.status,
     verifiedAt: b.verifiedAt?.toISOString() || "",
-    user: userMap.get(b.userId) || { name: "—", email: "—" },
+    user: userMap.get(b.userId) || { name: "—", email: "—", level: null },
   }));
 
   return NextResponse.json({

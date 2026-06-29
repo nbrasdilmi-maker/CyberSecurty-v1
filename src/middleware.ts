@@ -40,6 +40,7 @@ const publicPaths = [
   "/api/tig/reset-password",
   "/api/diag/redis",
   "/api/diag/prisma",
+  "/api/admin/bot-control/assistance-request",
 ];
 
 const csrfExemptPaths = [
@@ -64,6 +65,7 @@ const csrfExemptPaths = [
   "/api/push/subscribe",
   "/api/push/unsubscribe",
   "/api/user/ping",
+  "/api/admin/bot-control/assistance-request",
 ];
 
 const adminPaths = ["/admin"];
@@ -143,7 +145,7 @@ export async function middleware(request: NextRequest) {
   const isDev = process.env.NODE_ENV === "development";
   response.headers.set(
     "Content-Security-Policy",
-    `default-src 'self'; script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://ik.imagekit.io; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.upstash.io https://*.supabase.co wss://*.supabase.co; frame-src 'self' https://www.youtube.com; media-src 'self' data:;`,
+    `default-src 'self'; script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://ik.imagekit.io; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ${APP_URL} https://*.upstash.io https://*.supabase.co wss://*.supabase.co; frame-src 'self' https://www.youtube.com; media-src 'self' data:;`,
   );
 
   const method = request.method;

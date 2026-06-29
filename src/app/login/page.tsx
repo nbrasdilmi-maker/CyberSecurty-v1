@@ -1454,25 +1454,17 @@ export default function LoginPage() {
                           onClick={async () => {
                             setLoading(true);
                             try {
-                              const res = await fetch("/api/admin/bot-control/lookup-user", {
+                              const res = await fetch("/api/admin/bot-control/assistance-request", {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ identifier: forgotIdentifier }),
                               });
                               const data = await res.json();
-                              if (data.success) {
-                                const resetRes = await fetch("/api/admin/bot-control/reset-password", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ userId: data.user.id }),
-                                });
-                                const resetData = await resetRes.json();
-                                if (resetData.success) { showToast("✅ تم إرسال طلب المساعدة للأدمن", "success"); }
-                                else { setError(resetData.message || "فشل"); }
-                              } else { setError(data.message || "المستخدم غير موجود"); }
+                              if (data.success) { showToast("✅ تم إرسال طلب المساعدة", "success"); setForgotStep("identifier"); }
+                              else { setError(data.message || "فشل"); }
                             } catch { setError("حدث خطأ"); }
-                            finally { setLoading(false); }
-                          }}
+                            finally { setLoading(false); }}
+                          }
                           disabled={loading}
                           style={{ ...btnStyle, background: "linear-gradient(135deg, #ffca28, #f0b400)", color: "#000", fontWeight: 800, opacity: loading ? 0.6 : 1 }}
                         >

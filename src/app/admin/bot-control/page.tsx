@@ -20,7 +20,7 @@ interface RecentBinding {
   telegramUsername: string | null;
   status: string;
   verifiedAt: string;
-  user: { name: string; email: string };
+  user: { name: string; email: string; level: string | null };
 }
 
 interface LookupUser {
@@ -57,13 +57,25 @@ export default function BotControlPage() {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resettingSession, setResettingSession] = useState(false);
+  const [unbindingId, setUnbindingId] = useState<string | null>(null);
+  const [reactivatingId, setReactivatingId] = useState<string | null>(null);
 
   const [recoveryIdentifier, setRecoveryIdentifier] = useState("");
   const [recoveryCode, setRecoveryCode] = useState("");
   const [recoveryLoading, setRecoveryLoading] = useState(false);
 
+  const [assistanceRequests, setAssistanceRequests] = useState<any[]>([]);
+  const [assistingUser, setAssistingUser] = useState<any>(null);
+  const [assistPassword, setAssistPassword] = useState("");
+  const [assistResolving, setAssistResolving] = useState(false);
+
+  const [completedRequests, setCompletedRequests] = useState<any[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   useEffect(() => {
     loadStats();
+    loadAssistanceRequests();
+    loadCompletedRequests();
   }, []);
 
   async function loadStats() {
@@ -183,6 +195,202 @@ export default function BotControlPage() {
     }
   }
 
+  async function loadAssistanceRequests() {
+    try {
+      const res = await fetch("/api/admin/bot-control/assistance-requests");
+      const json = await res.json();
+      if (json.success) {
+        setAssistanceRequests(json.requests);
+      }
+    } catch {
+      console.error("Failed to load assistance requests");
+    }
+  }
+
+  async function handleAssistResolve() {
+    if (!assistingUser || !assistPassword.trim()) return;
+    setAssistResolving(true);
+    try {
+      const res = await csrfFetch("/api/admin/bot-control/assistance-resolve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: assistingUser.userId, newPassword: assistPassword }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        const levelLabel = json.user.level ? { LEVEL_1: "المستوى الأول", LEVEL_2: "المستوى الثاني", LEVEL_3: "المستوى الثالث", LEVEL_4: "المستوى الرابع" }[json.user.level as string] || json.user.level : "—";
+        const botUsername = "CyberSecurityCloudBot";
+        const txtLines = [
+          "═══════════════════════════════════════",
+          "  إعادة تعيين كلمة المرور - سحابة الأمن السيبراني",
+          "═══════════════════════════════════════",
+          "",
+          `  هوية المستخدم: ${json.user.name}`,
+          `  المستوى: ${levelLabel}`,
+          "",
+          "  تم إعادة تعيين الباسورد الخاص بحسابك في المنصة.",
+          `  الباسورد الافتراضي: ${assistPassword}`,
+          "",
+          "  يرجى ربط حسابك في المنصة ببوت التحقق في التليجرام:",
+          `  @${botUsername}`,
+          "",
+          "  ⚠️ يرجى تغيير كلمة المرور بعد تسجيل الدخول الأول.",
+          "",
+          "═══════════════════════════════════════",
+          "  جامعة ذمار - كلية الحاسبات",
+          "  Dhamar University - Faculty of Computers",
+          "═══════════════════════════════════════",
+        ].join("\n");
+        const blob = new Blob([txtLines], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `reset-password-${assistingUser.userName || assistingUser.userId}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("✅ تم إعادة التعيين وتحميل الملف", "success");
+        setAssistingUser(null);
+        setAssistPassword("");
+        loadAssistanceRequests();
+        loadCompletedRequests();
+      } else {
+        showToast(json.message || "فشلت العملية", "error");
+      }
+    } catch {
+      showToast("حدث خطأ", "error");
+    } finally {
+      setAssistResolving(false);
+    }
+  }
+
+  async function loadCompletedRequests() {
+    try {
+      const res = await fetch("/api/admin/bot-control/assistance-completed");
+      const json = await res.json();
+      if (json.success) setCompletedRequests(json.requests);
+    } catch {
+      console.error("Failed to load completed requests");
+    }
+  }
+
+  async function handleCompletedDownload(userId: string) {
+    try {
+      const res = await csrfFetch("/api/admin/bot-control/assistance-completed/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        const levelLabel = json.level ? { LEVEL_1: "المستوى الأول", LEVEL_2: "المستوى الثاني", LEVEL_3: "المستوى الثالث", LEVEL_4: "المستوى الرابع" }[json.level as string] || json.level : "—";
+        const botUsername = "CyberSecurityCloudBot";
+        const txtLines = [
+          "═══════════════════════════════════════",
+          "  إعادة تعيين كلمة المرور - سحابة الأمن السيبراني",
+          "═══════════════════════════════════════",
+          "",
+          `  هوية المستخدم: ${json.userName}`,
+          `  المستوى: ${levelLabel}`,
+          "",
+          "  تم إعادة تعيين الباسورد الخاص بحسابك في المنصة.",
+          `  الباسورد الافتراضي: ${json.password}`,
+          "",
+          "  يرجى ربط حسابك في المنصة ببوت التحقق في التليجرام:",
+          `  @${botUsername}`,
+          "",
+          "  ⚠️ يرجى تغيير كلمة المرور بعد تسجيل الدخول الأول.",
+          "",
+          "═══════════════════════════════════════",
+          "  جامعة ذمار - كلية الحاسبات",
+          "  Dhamar University - Faculty of Computers",
+          "═══════════════════════════════════════",
+        ].join("\n");
+        const blob = new Blob([txtLines], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `reset-password-${json.userName}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("✅ تم تحميل الملف", "success");
+      } else {
+        showToast(json.message || "فشل التحميل", "error");
+      }
+    } catch {
+      showToast("حدث خطأ", "error");
+    }
+  }
+
+  async function handleCompletedDelete(id: string) {
+    setDeletingId(id);
+    try {
+      const res = await csrfFetch("/api/admin/bot-control/assistance-completed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast("✅ تم حذف الطلب", "success");
+        loadCompletedRequests();
+      } else {
+        showToast(json.message || "فشل الحذف", "error");
+      }
+    } catch {
+      showToast("حدث خطأ", "error");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function handleAdminUnbind(userId: string) {
+    setUnbindingId(userId);
+    try {
+      const res = await csrfFetch("/api/admin/bot-control/admin-unbind", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast("✅ تم إلغاء الربط", "success");
+        loadStats();
+      } else {
+        showToast(json.message || "فشل", "error");
+      }
+    } catch {
+      showToast("حدث خطأ", "error");
+    } finally {
+      setUnbindingId(null);
+    }
+  }
+
+  async function handleReactivate(userId: string) {
+    setReactivatingId(userId);
+    try {
+      const res = await csrfFetch("/api/admin/bot-control/reactivate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast("✅ تم إعادة التفعيل", "success");
+        loadStats();
+      } else {
+        showToast(json.message || "فشل", "error");
+      }
+    } catch {
+      showToast("حدث خطأ", "error");
+    } finally {
+      setReactivatingId(null);
+    }
+  }
+
   async function handleGenerateRecovery() {
     if (!recoveryIdentifier.trim()) return;
     setRecoveryLoading(true);
@@ -240,24 +448,132 @@ export default function BotControlPage() {
 
               {recentBindings.length > 0 && (
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`${glassStyle} p-6 mb-8`}>
-                  <h2 className="text-lg font-semibold text-[#00e5ff] mb-4">آخر عمليات الربط</h2>
+                  <h2 className="text-lg font-semibold text-[#00e5ff] mb-4">📋 سجل الربط</h2>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-[#8b949e] border-b border-[#00e5ff]/10">
                           <th className="text-right py-2 px-3">الاسم</th>
-                          <th className="text-right py-2 px-3">البريد</th>
+                          <th className="text-right py-2 px-3">المستوى</th>
                           <th className="text-right py-2 px-3">Telegram</th>
+                          <th className="text-right py-2 px-3">الحالة</th>
                           <th className="text-right py-2 px-3">التاريخ</th>
+                          <th className="text-center py-2 px-3">إجراء</th>
                         </tr>
                       </thead>
                       <tbody>
                         {recentBindings.map((b) => (
                           <tr key={b.id} className="border-b border-white/5 hover:bg-white/[0.02]">
                             <td className="py-2 px-3 text-[#e6edf3]">{b.user.name}</td>
-                            <td className="py-2 px-3 text-[#8b949e]">{b.user.email}</td>
+                            <td className="py-2 px-3 text-[#8b949e]">{b.user.level ? { LEVEL_1: "الأول", LEVEL_2: "الثاني", LEVEL_3: "الثالث", LEVEL_4: "الرابع" }[b.user.level as string] || b.user.level : "—"}</td>
                             <td className="py-2 px-3 text-[#8b949e]">{b.telegramUsername ? `@${b.telegramUsername}` : "—"}</td>
+                            <td className="py-2 px-3"><span className={`${b.status === "ACTIVE" ? "text-[#2ea043]" : "text-[#f85149]"}`}>{b.status === "ACTIVE" ? "نشط" : "ملغي"}</span></td>
                             <td className="py-2 px-3 text-[#8b949e]">{new Date(b.verifiedAt).toLocaleDateString("ar-SA")}</td>
+                            <td className="py-2 px-3 text-center">
+                              <div className="flex gap-1 justify-center">
+                                <button
+                                  onClick={() => handleAdminUnbind(b.userId)}
+                                  disabled={b.status !== "ACTIVE" || unbindingId === b.userId}
+                                  className="px-2 py-1 bg-[#f85149]/10 border border-[#f85149]/30 text-[#f85149] rounded-lg text-xs hover:bg-[#f85149]/20 transition-all disabled:opacity-30"
+                                >
+                                  {unbindingId === b.userId ? "..." : "إلغاء الربط"}
+                                </button>
+                                <button
+                                  onClick={() => handleReactivate(b.userId)}
+                                  disabled={reactivatingId === b.userId}
+                                  className="px-2 py-1 bg-[#2ea043]/10 border border-[#2ea043]/30 text-[#2ea043] rounded-lg text-xs hover:bg-[#2ea043]/20 transition-all disabled:opacity-30"
+                                >
+                                  {reactivatingId === b.userId ? "..." : "إعادة تفعيل"}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
+              )}
+
+              {assistanceRequests.length > 0 && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className={`${glassStyle} p-6 mb-8`}>
+                  <h2 className="text-lg font-semibold text-[#ffca28] mb-4">🆘 طلبات المساعدة</h2>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-[#8b949e] border-b border-[#ffca28]/10">
+                          <th className="text-right py-2 px-3">الاسم</th>
+                          <th className="text-right py-2 px-3">المستوى</th>
+                          <th className="text-right py-2 px-3">IP</th>
+                          <th className="text-right py-2 px-3">التاريخ</th>
+                          <th className="text-center py-2 px-3">إجراء</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {assistanceRequests.map((r: any) => (
+                          <tr key={r.userId} className="border-b border-white/5 hover:bg-white/[0.02]">
+                            <td className="py-2 px-3 text-[#e6edf3]">{r.userName}</td>
+                            <td className="py-2 px-3 text-[#8b949e]">{r.level ? { LEVEL_1: "الأول", LEVEL_2: "الثاني", LEVEL_3: "الثالث", LEVEL_4: "الرابع" }[r.level as string] || r.level : "—"}</td>
+                            <td className="py-2 px-3 text-[#8b949e] direction-ltr text-left">{r.ip || "—"}</td>
+                            <td className="py-2 px-3 text-[#8b949e]">{new Date(r.requestedAt).toLocaleDateString("ar-SA")}</td>
+                            <td className="py-2 px-3 text-center">
+                              <button
+                                onClick={() => { setAssistingUser(r); setAssistPassword(""); }}
+                                className="px-3 py-1.5 bg-[#ffca28]/10 border border-[#ffca28]/30 text-[#ffca28] rounded-xl text-xs hover:bg-[#ffca28]/20 transition-all"
+                              >
+                                🔑 إعادة تعيين
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
+              )}
+
+              {completedRequests.length > 0 && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className={`${glassStyle} p-6 mb-8`}>
+                  <h2 className="text-lg font-semibold text-[#2ea043] mb-4">📋 سجل الطلبات المنجزة</h2>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-[#8b949e] border-b border-[#2ea043]/10">
+                          <th className="text-right py-2 px-3">الاسم</th>
+                          <th className="text-right py-2 px-3">المستوى</th>
+                          <th className="text-right py-2 px-3">تاريخ الإنجاز</th>
+                          <th className="text-center py-2 px-3">إجراء</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {completedRequests.map((r: any) => (
+                          <tr key={r.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                            <td className="py-2 px-3 text-[#e6edf3]">{r.userName}</td>
+                            <td className="py-2 px-3 text-[#8b949e]">{r.level ? { LEVEL_1: "الأول", LEVEL_2: "الثاني", LEVEL_3: "الثالث", LEVEL_4: "الرابع" }[r.level as string] || r.level : "—"}</td>
+                            <td className="py-2 px-3 text-[#8b949e]">{new Date(r.resolvedAt).toLocaleDateString("ar-SA")}</td>
+                            <td className="py-2 px-3 text-center">
+                              <div className="flex gap-1 justify-center">
+                                <button
+                                  onClick={() => { setAssistingUser(r); setAssistPassword(""); }}
+                                  className="px-2 py-1 bg-[#ffca28]/10 border border-[#ffca28]/30 text-[#ffca28] rounded-lg text-xs hover:bg-[#ffca28]/20 transition-all"
+                                >
+                                  🔑 إعادة تعيين
+                                </button>
+                                <button
+                                  onClick={() => handleCompletedDownload(r.userId)}
+                                  className="px-2 py-1 bg-[#00e5ff]/10 border border-[#00e5ff]/30 text-[#00e5ff] rounded-lg text-xs hover:bg-[#00e5ff]/20 transition-all"
+                                >
+                                  📥 تحميل
+                                </button>
+                                <button
+                                  onClick={() => handleCompletedDelete(r.id)}
+                                  disabled={deletingId === r.id}
+                                  className="px-2 py-1 bg-[#f85149]/10 border border-[#f85149]/30 text-[#f85149] rounded-lg text-xs hover:bg-[#f85149]/20 transition-all disabled:opacity-30"
+                                >
+                                  {deletingId === r.id ? "..." : "🗑️ حذف"}
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -357,6 +673,37 @@ export default function BotControlPage() {
               </div>
             </>
           )}
+      {assistingUser && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} p-6 w-full max-w-md mx-4`}>
+            <h3 className="text-lg font-semibold text-[#ffca28] mb-2">🔑 إعادة تعيين باسورد</h3>
+            <p className="text-sm text-[#8b949e] mb-4">المستخدم: {assistingUser.userName}</p>
+            <input
+              type="text"
+              value={assistPassword}
+              onChange={(e) => setAssistPassword(e.target.value)}
+              placeholder="أدخل الباسورد الافتراضي (8 أحرف على الأقل)"
+              className="w-full bg-[#0d152e] border border-[#ffca28]/20 rounded-xl px-4 py-2.5 text-[#e6edf3] placeholder:text-[#484f6a] focus:outline-none focus:border-[#ffca28]/50 text-sm mb-4"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleAssistResolve}
+                disabled={assistResolving || assistPassword.length < 8}
+                className="flex-1 py-2.5 bg-[#ffca28]/10 border border-[#ffca28]/30 text-[#ffca28] rounded-xl text-sm hover:bg-[#ffca28]/20 transition-all disabled:opacity-40"
+              >
+                {assistResolving ? "جاري..." : "✅ تأكيد + تحميل الملف"}
+              </button>
+              <button
+                onClick={() => { setAssistingUser(null); setAssistPassword(""); }}
+                disabled={assistResolving}
+                className="py-2.5 px-4 bg-white/5 border border-white/10 text-[#8b949e] rounded-xl text-sm hover:bg-white/10 transition-all disabled:opacity-40"
+              >
+                إلغاء
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </main>
   );
 }

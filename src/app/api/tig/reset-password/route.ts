@@ -27,7 +27,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message: "محاولات كثيرة. حاول لاحقاً." }, { status: 429 });
   }
   const user = await prisma.user.findFirst({
-    where: { OR: [{ email: identifier.toLowerCase().trim() }, { name: identifier.trim() }], deletedAt: null },
+    where: { OR: [{ email: identifier.toLowerCase().trim() }, { name: identifier.trim() }, { username: identifier.trim() }], deletedAt: null },
     select: { id: true, email: true, name: true, role: true, level: true },
   });
   if (!user) {

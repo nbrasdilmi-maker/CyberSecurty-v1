@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import redis from "@/lib/redis";
 import crypto from "crypto";
 
-const OTP_TTL = 300;
+const OTP_TTL = 180;
 const BIND_CODE_TTL = 1800;
 const DAILY_RESET_LIMIT = 3;
 
@@ -122,18 +122,45 @@ export class TigService {
         },
       });
     }
+    await this.setPermanentLock(telegramId, userId);
     return { ok: true as const, userId };
   }
 
-  async unbind(userId: string) {
+  async setPermanentLock(telegramId: bigint, userId: string) {
+    const key = `tig:perm-lock:${telegramId}`;
+    await redis.set(key, JSON.stringify({ userId, boundAt: Date.now() }), { ex: 86400 * 365 });
+  }
+
+  async isPermanentlyLocked(telegramId: bigint): Promise<string | null> {
+    const key = `tig:perm-lock:${telegramId}`;
+    const raw = await redis.get<string>(key);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    return data.userId || null;
+  }
+
+  async removePermanentLock(telegramId: bigint) {
+    await redis.del(`tig:perm-lock:${telegramId}`);
+  }
+
+  async unbind(userId: string, force: boolean = false) {
     const binding = await prisma.telegramBinding.findUnique({
       where: { userId },
     });
     if (!binding) return { ok: false as const, error: "لا يوجد ربط" };
+    if (!force) {
+      const lockedUserId = await this.isPermanentlyLocked(binding.telegramId);
+      if (lockedUserId) {
+        return { ok: false as const, error: "لا يمكن إلغاء الربط من هنا. يرجى الاتصال بالأدمن." };
+      }
+    }
     await prisma.telegramBinding.update({
       where: { id: binding.id },
       data: { status: "REVOKED" },
     });
+    if (force) {
+      await this.removePermanentLock(binding.telegramId);
+    }
     return { ok: true as const };
   }
 
@@ -225,16 +252,26 @@ export class TigService {
           deletedAt: null,
           isActivated: true,
         },
-        select: { id: true, email: true, name: true, username: true, role: true },
+        select: { id: true, email: true, name: true, username: true, role: true, level: true },
       });
     }
     return prisma.user.findFirst({
       where: { OR: [{ name: trimmed }, { username: trimmed }], deletedAt: null, isActivated: true },
-      select: { id: true, email: true, name: true, username: true, role: true },
+      select: { id: true, email: true, name: true, username: true, role: true, level: true },
     });
   }
 
   // ==================== OTP ====================
+
+  async checkDailyResetLimit(userId: string): Promise<boolean> {
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `tig:daily-reset:${userId}:${today}`;
+    const count = await redis.incr(key);
+    if (count === 1) {
+      await redis.expire(key, 172800);
+    }
+    return count <= DAILY_RESET_LIMIT;
+  }
 
   async sendPasswordResetOtp(userId: string, email: string, chatId: bigint) {
     const otp = String(crypto.randomInt(100000, 1000000));
@@ -361,6 +398,7 @@ export class TigService {
       return { ok: false as const, error: "المستخدم غير موجود" };
     }
 
+    await this.setPermanentLock(telegramId, userId);
     const { otp } = await this.sendPasswordResetOtp(userId, user.email, chatId);
     session.bound = true;
     session.otpSent = true;

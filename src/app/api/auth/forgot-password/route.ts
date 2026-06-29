@@ -7,7 +7,7 @@ import { withErrorHandler } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 const forgotSchema = z.object({
-  identifier: z.string().min(1, "يرجى إدخال البريد الإلكتروني أو اسم المستخدم"),
+  identifier: z.string().min(1, "يرجى إدخال اسم المستخدم"),
 });
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
@@ -33,15 +33,24 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   const binding = await tigService.getBinding(user.id);
 
   if (binding?.status === "ACTIVE") {
+    const dailyOk = await tigService.checkDailyResetLimit(user.id);
+    if (!dailyOk) {
+      return NextResponse.json({ success: false, message: "تجاوزت الحد اليومي لطلبات إعادة التعيين (3 محاولات). حاول غداً." }, { status: 429 });
+    }
+
     const { otp } = await tigService.sendPasswordResetOtp(user.id, user.email, binding.chatId);
     try {
       const bot = getBot();
+      const codeMsg = await bot.api.sendMessage(
+        Number(binding.chatId),
+        `🔐 رمز التحقق الخاص بك: ${otp}\n\n⏳ سينتهي هذا الرمز بعد 3 دقائق`,
+      );
+      setTimeout(async () => {
+        try { await bot.api.deleteMessage(Number(binding.chatId), codeMsg.message_id); } catch {}
+      }, 180000);
       await bot.api.sendMessage(
         Number(binding.chatId),
-        `🔐 طلب استعادة كلمة المرور\n\n` +
-          `رمز التحقق الخاص بك: ${otp}\n\n` +
-          `⏳ الرمز صالح لمدة 5 دقائق\n` +
-          `إذا لم تكن أنت من طلب الاستعادة، تجاهل هذه الرسالة.`,
+        `📩 تم إرسال رمز التحقق إلى حسابك في التليجرام.\nالرجاء إدخال الرمز في نافذة استعادة كلمة المرور خلال 3 دقائق.`,
       );
       logger.info("Password reset OTP sent via Telegram", { userId: user.id });
     } catch (err) {
