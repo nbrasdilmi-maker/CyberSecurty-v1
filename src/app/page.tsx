@@ -390,10 +390,14 @@ export default function HomePage() {
               letterSpacing: "0.2px",
             }}
           >
-            تم التطوير بواسطة{" "}
+            فريق التطوير:{" "}
             <span className="name-glow">محمد إبراهيم الديلمي</span>
-            <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 4px" }}>&amp;</span>
+            <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 4px" }}>|</span>
             <span className="name-glow">أحمد الهيدمة</span>
+            <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 4px" }}>|</span>
+            <span className="name-glow">عبدالجليل الجبلي</span>
+            <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 4px" }}>|</span>
+            <span className="name-glow">أسامة شرهان</span>
           </div>
         </footer>
       </div>

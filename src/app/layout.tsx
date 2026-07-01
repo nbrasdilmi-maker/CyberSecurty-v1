@@ -16,7 +16,12 @@ export const metadata: Metadata = {
   description:
     "بيئة تعليمية تفاعلية متكاملة لطلاب ومعلمي كلية الأمن السيبراني - جامعة ذمار",
   keywords: "أمن سيبراني, جامعة ذمار, تعليم, تكاليف, مكتبة علمية",
-  authors: [{ name: "محمد إبراهيم الديلمي" }, { name: "أحمد الهيدمة" }],
+  authors: [
+    { name: "محمد إبراهيم الديلمي" },
+    { name: "أحمد الهيدمة" },
+    { name: "عبدالجليل الجبلي" },
+    { name: "أسامة شرهان" },
+  ],
   openGraph: {
     title: "سحابة الأمن السيبراني",
     description: "بيئة تعليمية تفاعلية لطلاب الأمن السيبراني",
@@ -64,7 +69,6 @@ export default function RootLayout({
                   <PageTransition>{children}</PageTransition>
                 </AppShell>
               </PageGuardProvider>
-
             </AnimationsProvider>
           </ToastProvider>
         </div>

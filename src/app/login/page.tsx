@@ -48,6 +48,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [clock, setClock] = useState("00:00:00 AM");
+  const [showTeam, setShowTeam] = useState(false);
 
   // تفعيل البصمة بعد تسجيل الدخول
   const [showWebAuthnPrompt, setShowWebAuthnPrompt] = useState(false);
@@ -82,7 +83,12 @@ export default function LoginPage() {
   const [activateEmail, setActivateEmail] = useState("");
   const [activatePassword, setActivatePassword] = useState("");
   const [activateConfirm, setActivateConfirm] = useState("");
-  const [activateUserInfo, setActivateUserInfo] = useState<{ name: string; role: string; level: string | null; username: string } | null>(null);
+  const [activateUserInfo, setActivateUserInfo] = useState<{
+    name: string;
+    role: string;
+    level: string | null;
+    username: string;
+  } | null>(null);
   const [bindCode, setBindCode] = useState("");
   const [bindingDone, setBindingDone] = useState(false);
   const [showActivateHelp, setShowActivateHelp] = useState(false);
@@ -278,25 +284,30 @@ export default function LoginPage() {
     webAuthnRegOptRef.current = null; // استخدام لمرة واحدة
 
     // استدعاء startRegistration بشكل متزامن مع النقرة للحفاظ على user gesture
-    startRegistration({ optionsJSON: options }).then(async (regResponse) => {
-      const completeRes = await fetch("/api/auth/webauthn/register/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(regResponse),
-      });
-      const completeData = await completeRes.json();
-      if (!completeData.success) throw new Error(completeData.message);
+    startRegistration({ optionsJSON: options })
+      .then(async (regResponse) => {
+        const completeRes = await fetch(
+          "/api/auth/webauthn/register/complete",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(regResponse),
+          },
+        );
+        const completeData = await completeRes.json();
+        if (!completeData.success) throw new Error(completeData.message);
 
-      setWebAuthnDone(true);
-      tryEnablePush();
-      setTimeout(() => {
-        setShowWebAuthnPrompt(false);
-        redirectToDashboard(completeData.role || "");
-      }, 1500);
-    }).catch((err: any) => {
-      setError(err.message || "فشل تسجيل البصمة");
-      setWebAuthnRegistering(false);
-    });
+        setWebAuthnDone(true);
+        tryEnablePush();
+        setTimeout(() => {
+          setShowWebAuthnPrompt(false);
+          redirectToDashboard(completeData.role || "");
+        }, 1500);
+      })
+      .catch((err: any) => {
+        setError(err.message || "فشل تسجيل البصمة");
+        setWebAuthnRegistering(false);
+      });
   };
 
   const handleSkipWebAuthn = () => {
@@ -349,7 +360,9 @@ export default function LoginPage() {
         managementLevel: data.user?.managementLevel || null,
       });
       // إذا المستخدم ما عنده بصمة مفعلة، اسأله (مرة واحدة فقط)
-      const webauthnDismissed = typeof window !== "undefined" && localStorage.getItem("webauthn_prompt_dismissed") === "true";
+      const webauthnDismissed =
+        typeof window !== "undefined" &&
+        localStorage.getItem("webauthn_prompt_dismissed") === "true";
       if (data.user && !data.user.webAuthnEnabled && !webauthnDismissed) {
         setPendingUser({
           id: data.user.id,
@@ -372,7 +385,8 @@ export default function LoginPage() {
   const handleForgotPassword = async () => {
     setError("");
     if (forgotStep === "identifier") {
-      if (!forgotIdentifier) return setError("يرجى إدخال البريد الإلكتروني أو اسم المستخدم");
+      if (!forgotIdentifier)
+        return setError("يرجى إدخال البريد الإلكتروني أو اسم المستخدم");
       setLoading(true);
       try {
         const res = await fetch("/api/auth/forgot-password", {
@@ -387,7 +401,9 @@ export default function LoginPage() {
           } else if (data.step === "no_binding") {
             setNoBindingUserName(data.userName || "");
             setForgotStep("otp");
-            setError("❌ حسابك غير مرتبط بـ Telegram. استخدم خيار طلب مساعدة الأدمن.");
+            setError(
+              "❌ حسابك غير مرتبط بـ Telegram. استخدم خيار طلب مساعدة الأدمن.",
+            );
           }
         } else {
           setError(data.message || "فشل الإرسال");
@@ -404,7 +420,10 @@ export default function LoginPage() {
         const res = await fetch("/api/tig/verify-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier: forgotIdentifier, code: forgotCode }),
+          body: JSON.stringify({
+            identifier: forgotIdentifier,
+            code: forgotCode,
+          }),
         });
         const data = await res.json();
         if (data.success) {
@@ -461,7 +480,10 @@ export default function LoginPage() {
 
   // ==================== تفعيل الحساب ====================
   const handleActivateCode = async () => {
-    if (!activateCode.trim()) { setError("يرجى إدخال كود التفعيل"); return; }
+    if (!activateCode.trim()) {
+      setError("يرجى إدخال كود التفعيل");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
@@ -486,9 +508,18 @@ export default function LoginPage() {
 
   const handleActivatePassword = async () => {
     const finalUsername = activateUserInfo?.username || "";
-    if (!finalUsername) { setError("يرجى تحديد اسم المستخدم"); return; }
-    if (activatePassword.length < 8) { setError("كلمة المرور يجب أن تكون 8 أحرف على الأقل"); return; }
-    if (activatePassword !== activateConfirm) { setError("كلمتا المرور غير متطابقتين"); return; }
+    if (!finalUsername) {
+      setError("يرجى تحديد اسم المستخدم");
+      return;
+    }
+    if (activatePassword.length < 8) {
+      setError("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
+      return;
+    }
+    if (activatePassword !== activateConfirm) {
+      setError("كلمتا المرور غير متطابقتين");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
@@ -523,7 +554,10 @@ export default function LoginPage() {
       const loginRes = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: bindUsername, password: activatePassword }),
+        body: JSON.stringify({
+          username: bindUsername,
+          password: activatePassword,
+        }),
       });
       const loginData = await loginRes.json();
       if (!loginRes.ok) throw new Error("فشل تسجيل الدخول");
@@ -566,7 +600,10 @@ export default function LoginPage() {
     setPanel("login");
     setGlobeRight(false);
     setTimeout(() => {
-      showToast("✅ تم تفعيل الحساب بنجاح. يمكنك الآن تسجيل الدخول.", "success");
+      showToast(
+        "✅ تم تفعيل الحساب بنجاح. يمكنك الآن تسجيل الدخول.",
+        "success",
+      );
     }, 300);
   };
 
@@ -690,7 +727,10 @@ export default function LoginPage() {
                 fontFamily: "'Orbitron', sans-serif",
                 transition: "box-shadow 0.4s",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 24px rgba(0,229,255,0.25)")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.boxShadow =
+                  "0 0 24px rgba(0,229,255,0.25)")
+              }
               onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
             >
               CS
@@ -706,7 +746,8 @@ export default function LoginPage() {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.color = "#00e5ff";
-                e.currentTarget.style.textShadow = "0 0 20px rgba(0,229,255,0.5)";
+                e.currentTarget.style.textShadow =
+                  "0 0 20px rgba(0,229,255,0.5)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.color = "rgba(255,255,255,0.6)";
@@ -998,38 +1039,41 @@ export default function LoginPage() {
                         webAuthnLoginUserIdRef.current = null;
 
                         // استدعاء startAuthentication بشكل متزامن مع النقرة
-                        startAuthentication({ optionsJSON: options }).then(async (authResponse) => {
-                          const completeRes = await fetch(
-                            "/api/auth/webauthn/login/complete",
-                            {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ userId, authResponse }),
-                            },
-                          );
-                          const completeData = await completeRes.json();
-                          if (!completeData.success)
-                            throw new Error(completeData.message);
-                          setUser({
-                            id: userId || "",
-                            email: completeData.email || "",
-                            name: completeData.name || "",
-                            role: completeData.role,
-                            level: completeData.level || "",
-                            webAuthnEnabled: true,
+                        startAuthentication({ optionsJSON: options })
+                          .then(async (authResponse) => {
+                            const completeRes = await fetch(
+                              "/api/auth/webauthn/login/complete",
+                              {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ userId, authResponse }),
+                              },
+                            );
+                            const completeData = await completeRes.json();
+                            if (!completeData.success)
+                              throw new Error(completeData.message);
+                            setUser({
+                              id: userId || "",
+                              email: completeData.email || "",
+                              name: completeData.name || "",
+                              role: completeData.role,
+                              level: completeData.level || "",
+                              webAuthnEnabled: true,
+                            });
+                            if (completeData.role === "ADMIN")
+                              router.push("/admin");
+                            else if (completeData.role === "MANAGEMENT")
+                              router.push("/management");
+                            else if (completeData.role === "TEACHER")
+                              router.push("/teacher");
+                            else router.push("/student");
+                          })
+                          .catch((err: any) => {
+                            setError(err.message || "فشل الدخول بالبصمة");
+                          })
+                          .finally(() => {
+                            setLoading(false);
                           });
-                          if (completeData.role === "ADMIN")
-                            router.push("/admin");
-                          else if (completeData.role === "MANAGEMENT")
-                            router.push("/management");
-                          else if (completeData.role === "TEACHER")
-                            router.push("/teacher");
-                          else router.push("/student");
-                        }).catch((err: any) => {
-                          setError(err.message || "فشل الدخول بالبصمة");
-                        }).finally(() => {
-                          setLoading(false);
-                        });
                       }}
                       disabled={loading}
                       title="دخول بالبصمة"
@@ -1180,15 +1224,45 @@ export default function LoginPage() {
                 transition={{ duration: 0.5, ease: "easeOut" }}
                 style={glassPanelStyle}
               >
-                <h2 style={{ color: "#00e5ff", fontSize: "1.3rem", marginBottom: 4 }}>
+                <h2
+                  style={{
+                    color: "#00e5ff",
+                    fontSize: "1.3rem",
+                    marginBottom: 4,
+                  }}
+                >
                   تفعيل الحساب
                 </h2>
-                <p style={{ color: "#8b949e", fontSize: "0.8rem", marginBottom: 10 }}>
-                  المرحلة {activateStep === "code" ? "1" : activateStep === "username" ? "2" : activateStep === "password" ? "3" : "4"} من 4
+                <p
+                  style={{
+                    color: "#8b949e",
+                    fontSize: "0.8rem",
+                    marginBottom: 10,
+                  }}
+                >
+                  المرحلة{" "}
+                  {activateStep === "code"
+                    ? "1"
+                    : activateStep === "username"
+                      ? "2"
+                      : activateStep === "password"
+                        ? "3"
+                        : "4"}{" "}
+                  من 4
                 </p>
 
                 {error && (
-                  <div style={{ background: "rgba(248,81,73,0.1)", border: "1px solid #f85149", color: "#f85149", padding: "12px", borderRadius: "12px", marginBottom: "15px", fontSize: "0.9rem" }}>
+                  <div
+                    style={{
+                      background: "rgba(248,81,73,0.1)",
+                      border: "1px solid #f85149",
+                      color: "#f85149",
+                      padding: "12px",
+                      borderRadius: "12px",
+                      marginBottom: "15px",
+                      fontSize: "0.9rem",
+                    }}
+                  >
                     {error}
                   </div>
                 )}
@@ -1196,7 +1270,13 @@ export default function LoginPage() {
                 {/* ===== المرحلة 1: كود التفعيل ===== */}
                 {activateStep === "code" && (
                   <>
-                    <p style={{ color: "#8b949e", fontSize: "0.85rem", marginBottom: 12 }}>
+                    <p
+                      style={{
+                        color: "#8b949e",
+                        fontSize: "0.85rem",
+                        marginBottom: 12,
+                      }}
+                    >
                       أدخل كود التفعيل المرسل إليك
                     </p>
                     <input
@@ -1205,13 +1285,20 @@ export default function LoginPage() {
                       style={inputStyle}
                       value={activateCode}
                       onChange={(e) => setActivateCode(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleActivateCode()}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleActivateCode()
+                      }
                       required
                     />
                     <button
                       onClick={handleActivateCode}
                       disabled={loading || !activateCode.trim()}
-                      style={{ ...btnStyle, background: "linear-gradient(135deg, #238636, #2ea043)", boxShadow: "0 6px 25px rgba(35,134,54,0.35)", opacity: loading ? 0.6 : 1 }}
+                      style={{
+                        ...btnStyle,
+                        background: "linear-gradient(135deg, #238636, #2ea043)",
+                        boxShadow: "0 6px 25px rgba(35,134,54,0.35)",
+                        opacity: loading ? 0.6 : 1,
+                      }}
                     >
                       {loading ? "⏳ جاري التحقق..." : "التحقق من الكود"}
                     </button>
@@ -1224,35 +1311,108 @@ export default function LoginPage() {
                     {(() => {
                       const parts = activateUserInfo.name.split(" ");
                       const first = parts[0];
-                      const last = parts.length > 1 ? parts[parts.length - 1] : "";
-                      const masked = parts.length > 2
-                        ? `${first} ${"•".repeat(Math.max(6, (activateUserInfo.name.length - first.length - last.length) * 2))} ${last}`
-                        : activateUserInfo.name;
-                      const roleLabel = activateUserInfo.role === "ADMIN" ? "الأدمن" : activateUserInfo.role === "MANAGEMENT" ? "الإداري" : activateUserInfo.role === "TEACHER" ? "المعلم" : "الطالب";
+                      const last =
+                        parts.length > 1 ? parts[parts.length - 1] : "";
+                      const masked =
+                        parts.length > 2
+                          ? `${first} ${"•".repeat(Math.max(6, (activateUserInfo.name.length - first.length - last.length) * 2))} ${last}`
+                          : activateUserInfo.name;
+                      const roleLabel =
+                        activateUserInfo.role === "ADMIN"
+                          ? "الأدمن"
+                          : activateUserInfo.role === "MANAGEMENT"
+                            ? "الإداري"
+                            : activateUserInfo.role === "TEACHER"
+                              ? "المعلم"
+                              : "الطالب";
                       const levelLabel = activateUserInfo.level || "";
                       return (
-                        <div style={{ background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.2)", borderRadius: "14px", padding: "16px", marginBottom: 15, textAlign: "center" }}>
-                          <p style={{ color: "#00e5ff", fontSize: "1rem", fontWeight: 600, margin: "0 0 4px" }}>
-                            مرحباً بال{roleLabel}{levelLabel ? ` - ${levelLabel}` : ""}
+                        <div
+                          style={{
+                            background: "rgba(0,229,255,0.06)",
+                            border: "1px solid rgba(0,229,255,0.2)",
+                            borderRadius: "14px",
+                            padding: "16px",
+                            marginBottom: 15,
+                            textAlign: "center",
+                          }}
+                        >
+                          <p
+                            style={{
+                              color: "#00e5ff",
+                              fontSize: "1rem",
+                              fontWeight: 600,
+                              margin: "0 0 4px",
+                            }}
+                          >
+                            مرحباً بال{roleLabel}
+                            {levelLabel ? ` - ${levelLabel}` : ""}
                           </p>
-                          <p style={{ color: "#8b949e", fontSize: "1.3rem", fontWeight: 500, margin: "8px 0", direction: "rtl" }}>
+                          <p
+                            style={{
+                              color: "#8b949e",
+                              fontSize: "1.3rem",
+                              fontWeight: 500,
+                              margin: "8px 0",
+                              direction: "rtl",
+                            }}
+                          >
                             {masked}
                           </p>
                         </div>
                       );
                     })()}
 
-                    <div style={{ background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.2)", borderRadius: "14px", padding: "14px", marginBottom: 12, textAlign: "center" }}>
-                      <p style={{ color: "#8b949e", fontSize: "0.75rem", margin: "0 0 4px" }}>✅ تم التحقق بنجاح — اسم المستخدم الخاص بك:</p>
-                      <p style={{ color: "#00e5ff", fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Orbitron', sans-serif", direction: "ltr", margin: "8px 0", letterSpacing: 1, userSelect: "all" }}>
+                    <div
+                      style={{
+                        background: "rgba(0,229,255,0.06)",
+                        border: "1px solid rgba(0,229,255,0.2)",
+                        borderRadius: "14px",
+                        padding: "14px",
+                        marginBottom: 12,
+                        textAlign: "center",
+                      }}
+                    >
+                      <p
+                        style={{
+                          color: "#8b949e",
+                          fontSize: "0.75rem",
+                          margin: "0 0 4px",
+                        }}
+                      >
+                        ✅ تم التحقق بنجاح — اسم المستخدم الخاص بك:
+                      </p>
+                      <p
+                        style={{
+                          color: "#00e5ff",
+                          fontSize: "1.3rem",
+                          fontWeight: 700,
+                          fontFamily: "'Orbitron', sans-serif",
+                          direction: "ltr",
+                          margin: "8px 0",
+                          letterSpacing: 1,
+                          userSelect: "all",
+                        }}
+                      >
                         {activateUserInfo.username}
                       </p>
                       <button
                         onClick={() => {
-                          navigator.clipboard.writeText(activateUserInfo.username);
+                          navigator.clipboard.writeText(
+                            activateUserInfo.username,
+                          );
                           showToast("📋 تم نسخ اسم المستخدم", "success");
                         }}
-                        style={{ padding: "6px 18px", borderRadius: "10px", border: "1px solid rgba(0,229,255,0.3)", background: "rgba(0,229,255,0.1)", color: "#00e5ff", cursor: "pointer", fontSize: "0.8rem", fontFamily: "'Cairo', sans-serif" }}
+                        style={{
+                          padding: "6px 18px",
+                          borderRadius: "10px",
+                          border: "1px solid rgba(0,229,255,0.3)",
+                          background: "rgba(0,229,255,0.1)",
+                          color: "#00e5ff",
+                          cursor: "pointer",
+                          fontSize: "0.8rem",
+                          fontFamily: "'Cairo', sans-serif",
+                        }}
                       >
                         📋 نسخ اسم المستخدم
                       </button>
@@ -1261,7 +1421,13 @@ export default function LoginPage() {
                     <div style={{ display: "flex", gap: 8 }}>
                       <button
                         onClick={() => setActivateStep("password")}
-                        style={{ flex: 1, ...btnStyle, background: "linear-gradient(135deg, #238636, #2ea043)", boxShadow: "0 6px 25px rgba(35,134,54,0.35)" }}
+                        style={{
+                          flex: 1,
+                          ...btnStyle,
+                          background:
+                            "linear-gradient(135deg, #238636, #2ea043)",
+                          boxShadow: "0 6px 25px rgba(35,134,54,0.35)",
+                        }}
                       >
                         متابعة ←
                       </button>
@@ -1272,7 +1438,14 @@ export default function LoginPage() {
                 {/* ===== المرحلة 3: كلمة المرور ===== */}
                 {activateStep === "password" && (
                   <>
-                    <p style={{ color: "#8b949e", fontSize: "0.85rem", marginBottom: 12, textAlign: "right" }}>
+                    <p
+                      style={{
+                        color: "#8b949e",
+                        fontSize: "0.85rem",
+                        marginBottom: 12,
+                        textAlign: "right",
+                      }}
+                    >
                       أدخل كلمة مرور قوية لحماية حسابك:
                     </p>
                     <input
@@ -1294,13 +1467,24 @@ export default function LoginPage() {
                     <button
                       onClick={handleActivatePassword}
                       disabled={loading}
-                      style={{ ...btnStyle, background: "linear-gradient(135deg, #238636, #2ea043)", boxShadow: "0 6px 25px rgba(35,134,54,0.35)", opacity: loading ? 0.6 : 1 }}
+                      style={{
+                        ...btnStyle,
+                        background: "linear-gradient(135deg, #238636, #2ea043)",
+                        boxShadow: "0 6px 25px rgba(35,134,54,0.35)",
+                        opacity: loading ? 0.6 : 1,
+                      }}
                     >
                       {loading ? "⏳ جاري التفعيل..." : "تفعيل الحساب"}
                     </button>
                     <button
                       onClick={() => setActivateStep("username")}
-                      style={{ ...btnStyle, background: "transparent", border: "1px solid rgba(0,229,255,0.2)", color: "#00e5ff", marginTop: 8 }}
+                      style={{
+                        ...btnStyle,
+                        background: "transparent",
+                        border: "1px solid rgba(0,229,255,0.2)",
+                        color: "#00e5ff",
+                        marginTop: 8,
+                      }}
                     >
                       → العودة
                     </button>
@@ -1310,33 +1494,98 @@ export default function LoginPage() {
                 {/* ===== المرحلة 4: ربط Telegram (اختياري) ===== */}
                 {activateStep === "binding" && (
                   <>
-                    <p style={{ color: "#8b949e", fontSize: "0.85rem", marginBottom: 8 }}>
+                    <p
+                      style={{
+                        color: "#8b949e",
+                        fontSize: "0.85rem",
+                        marginBottom: 8,
+                      }}
+                    >
                       ✅ تم تفعيل حسابك بنجاح!
                     </p>
-                    <p style={{ color: "#8b949e", fontSize: "0.8rem", marginBottom: 12 }}>
-                      يمكنك ربط حسابك مع Telegram لاستعادة كلمة المرور بسهولة (اختياري)
+                    <p
+                      style={{
+                        color: "#8b949e",
+                        fontSize: "0.8rem",
+                        marginBottom: 12,
+                      }}
+                    >
+                      يمكنك ربط حسابك مع Telegram لاستعادة كلمة المرور بسهولة
+                      (اختياري)
                     </p>
 
                     {!bindCode ? (
                       <button
                         onClick={handleInitiateBinding}
                         disabled={loading}
-                        style={{ width: "100%", ...btnStyle, background: "linear-gradient(135deg, #2188ff, #0066cc)", boxShadow: "0 6px 25px rgba(33,136,255,0.35)", opacity: loading ? 0.6 : 1 }}
+                        style={{
+                          width: "100%",
+                          ...btnStyle,
+                          background:
+                            "linear-gradient(135deg, #2188ff, #0066cc)",
+                          boxShadow: "0 6px 25px rgba(33,136,255,0.35)",
+                          opacity: loading ? 0.6 : 1,
+                        }}
                       >
                         {loading ? "⏳ جاري..." : "🔗 ربط حساب Telegram"}
                       </button>
                     ) : (
-                      <div style={{ background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.2)", borderRadius: "14px", padding: "14px", marginBottom: 12, textAlign: "center" }}>
-                        <p style={{ color: "#8b949e", fontSize: "0.75rem", margin: "0 0 4px" }}>أرسل هذا الكود إلى البوت:</p>
-                        <p style={{ color: "#00e5ff", fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Orbitron', sans-serif", direction: "ltr", margin: "8px 0", letterSpacing: 2, userSelect: "all" }}>
+                      <div
+                        style={{
+                          background: "rgba(0,229,255,0.06)",
+                          border: "1px solid rgba(0,229,255,0.2)",
+                          borderRadius: "14px",
+                          padding: "14px",
+                          marginBottom: 12,
+                          textAlign: "center",
+                        }}
+                      >
+                        <p
+                          style={{
+                            color: "#8b949e",
+                            fontSize: "0.75rem",
+                            margin: "0 0 4px",
+                          }}
+                        >
+                          أرسل هذا الكود إلى البوت:
+                        </p>
+                        <p
+                          style={{
+                            color: "#00e5ff",
+                            fontSize: "1.3rem",
+                            fontWeight: 700,
+                            fontFamily: "'Orbitron', sans-serif",
+                            direction: "ltr",
+                            margin: "8px 0",
+                            letterSpacing: 2,
+                            userSelect: "all",
+                          }}
+                        >
                           {bindCode}
                         </p>
-                        <p style={{ color: "#8b949e", fontSize: "0.75rem", margin: 0 }}>@cyber_security_cloud_bot</p>
+                        <p
+                          style={{
+                            color: "#8b949e",
+                            fontSize: "0.75rem",
+                            margin: 0,
+                          }}
+                        >
+                          @cyber_security_cloud_bot
+                        </p>
                       </div>
                     )}
 
                     <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                      <button onClick={handleSkipBinding} style={{ flex: 1, ...btnStyle, background: "linear-gradient(135deg, #238636, #2ea043)", boxShadow: "0 6px 25px rgba(35,134,54,0.35)" }}>
+                      <button
+                        onClick={handleSkipBinding}
+                        style={{
+                          flex: 1,
+                          ...btnStyle,
+                          background:
+                            "linear-gradient(135deg, #238636, #2ea043)",
+                          boxShadow: "0 6px 25px rgba(35,134,54,0.35)",
+                        }}
+                      >
                         {bindCode ? "تم ✅" : "تخطي ←"}
                       </button>
                     </div>
@@ -1344,7 +1593,20 @@ export default function LoginPage() {
                 )}
 
                 {activateStep === "code" && (
-                  <span onClick={() => switchPanel("login")} style={{ display: "inline-block", marginTop: 15, color: "#00e5ff", cursor: "pointer", fontSize: "0.85rem", padding: "6px 14px", borderRadius: "20px", background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.2)" }}>
+                  <span
+                    onClick={() => switchPanel("login")}
+                    style={{
+                      display: "inline-block",
+                      marginTop: 15,
+                      color: "#00e5ff",
+                      cursor: "pointer",
+                      fontSize: "0.85rem",
+                      padding: "6px 14px",
+                      borderRadius: "20px",
+                      background: "rgba(0,229,255,0.06)",
+                      border: "1px solid rgba(0,229,255,0.2)",
+                    }}
+                  >
                     ← العودة إلى تسجيل الدخول
                   </span>
                 )}
@@ -1361,26 +1623,60 @@ export default function LoginPage() {
                 transition={{ duration: 0.5, ease: "easeOut" }}
                 style={glassPanelStyle}
               >
-                <h3 style={{ color: "#00e5ff", marginBottom: 15, fontSize: "1.2rem" }}>
+                <h3
+                  style={{
+                    color: "#00e5ff",
+                    marginBottom: 15,
+                    fontSize: "1.2rem",
+                  }}
+                >
                   {forgotStep === "identifier"
                     ? "استعادة كلمة المرور"
                     : forgotStep === "otp"
                       ? "إدخال رمز التحقق"
                       : "كلمة مرور جديدة"}
                 </h3>
-                <p style={{ color: "#8b949e", fontSize: "0.78rem", marginBottom: 10 }}>
-                  المرحلة {forgotStep === "identifier" ? "1" : forgotStep === "otp" ? "2" : "3"} من 3
+                <p
+                  style={{
+                    color: "#8b949e",
+                    fontSize: "0.78rem",
+                    marginBottom: 10,
+                  }}
+                >
+                  المرحلة{" "}
+                  {forgotStep === "identifier"
+                    ? "1"
+                    : forgotStep === "otp"
+                      ? "2"
+                      : "3"}{" "}
+                  من 3
                 </p>
 
                 {error && (
-                  <div style={{ background: "rgba(248,81,73,0.1)", border: "1px solid #f85149", color: "#f85149", padding: "12px", borderRadius: "12px", marginBottom: "15px", fontSize: "0.9rem" }}>
+                  <div
+                    style={{
+                      background: "rgba(248,81,73,0.1)",
+                      border: "1px solid #f85149",
+                      color: "#f85149",
+                      padding: "12px",
+                      borderRadius: "12px",
+                      marginBottom: "15px",
+                      fontSize: "0.9rem",
+                    }}
+                  >
                     {error}
                   </div>
                 )}
 
                 {forgotStep === "identifier" && (
                   <>
-                    <p style={{ color: "#8b949e", fontSize: "0.85rem", marginBottom: 15 }}>
+                    <p
+                      style={{
+                        color: "#8b949e",
+                        fontSize: "0.85rem",
+                        marginBottom: 15,
+                      }}
+                    >
                       أدخل بريدك الإلكتروني أو اسم المستخدم
                     </p>
                     <input
@@ -1389,10 +1685,21 @@ export default function LoginPage() {
                       style={inputStyle}
                       value={forgotIdentifier}
                       onChange={(e) => setForgotIdentifier(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && !loading && handleForgotPassword()}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && !loading && handleForgotPassword()
+                      }
                       required
                     />
-                    <button onClick={handleForgotPassword} disabled={loading} style={{ ...btnStyle, background: "linear-gradient(135deg, #2188ff, #0066cc)", boxShadow: "0 6px 25px rgba(33,136,255,0.35)", opacity: loading ? 0.6 : 1 }}>
+                    <button
+                      onClick={handleForgotPassword}
+                      disabled={loading}
+                      style={{
+                        ...btnStyle,
+                        background: "linear-gradient(135deg, #2188ff, #0066cc)",
+                        boxShadow: "0 6px 25px rgba(33,136,255,0.35)",
+                        opacity: loading ? 0.6 : 1,
+                      }}
+                    >
                       {loading ? "⏳ جاري البحث..." : "بحث"}
                     </button>
                   </>
@@ -1402,10 +1709,25 @@ export default function LoginPage() {
                   <>
                     {!noBindingUserName ? (
                       <>
-                        <p style={{ color: "#8b949e", fontSize: "0.85rem", marginBottom: 8 }}>
+                        <p
+                          style={{
+                            color: "#8b949e",
+                            fontSize: "0.85rem",
+                            marginBottom: 8,
+                          }}
+                        >
                           تم إرسال رمز التحقق إلى حسابك في Telegram
                         </p>
-                        <p style={{ color: "#00e5ff", fontSize: "1.1rem", fontWeight: 700, marginBottom: 15, direction: "ltr", textAlign: "center" }}>
+                        <p
+                          style={{
+                            color: "#00e5ff",
+                            fontSize: "1.1rem",
+                            fontWeight: 700,
+                            marginBottom: 15,
+                            direction: "ltr",
+                            textAlign: "center",
+                          }}
+                        >
                           @cyber_security_cloud_bot
                         </p>
                         <input
@@ -1417,7 +1739,17 @@ export default function LoginPage() {
                           required
                           maxLength={6}
                         />
-                        <button onClick={handleForgotPassword} disabled={loading} style={{ ...btnStyle, background: "linear-gradient(135deg, #2188ff, #0066cc)", boxShadow: "0 6px 25px rgba(33,136,255,0.35)", opacity: loading ? 0.6 : 1 }}>
+                        <button
+                          onClick={handleForgotPassword}
+                          disabled={loading}
+                          style={{
+                            ...btnStyle,
+                            background:
+                              "linear-gradient(135deg, #2188ff, #0066cc)",
+                            boxShadow: "0 6px 25px rgba(33,136,255,0.35)",
+                            opacity: loading ? 0.6 : 1,
+                          }}
+                        >
                           {loading ? "⏳ جاري التحقق..." : "تحقق من الكود"}
                         </button>
                         <button
@@ -1425,54 +1757,122 @@ export default function LoginPage() {
                             setLoading(true);
                             setError("");
                             try {
-                              const res = await fetch("/api/auth/forgot-password", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ identifier: forgotIdentifier }),
-                              });
+                              const res = await fetch(
+                                "/api/auth/forgot-password",
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    identifier: forgotIdentifier,
+                                  }),
+                                },
+                              );
                               const data = await res.json();
-                              if (data.success) { showToast("🔄 تم إعادة الإرسال", "success"); }
-                              else { setError(data.message || "فشل الإرسال"); }
-                            } catch { setError("حدث خطأ"); }
-                            finally { setLoading(false); }
+                              if (data.success) {
+                                showToast("🔄 تم إعادة الإرسال", "success");
+                              } else {
+                                setError(data.message || "فشل الإرسال");
+                              }
+                            } catch {
+                              setError("حدث خطأ");
+                            } finally {
+                              setLoading(false);
+                            }
                           }}
                           disabled={loading}
-                          style={{ ...btnStyle, background: "transparent", border: "1px solid rgba(255,202,40,0.3)", color: "#ffca28", marginTop: 8 }}
+                          style={{
+                            ...btnStyle,
+                            background: "transparent",
+                            border: "1px solid rgba(255,202,40,0.3)",
+                            color: "#ffca28",
+                            marginTop: 8,
+                          }}
                         >
                           {loading ? "⏳ جاري..." : "🔄 إعادة إرسال الرمز"}
                         </button>
                       </>
                     ) : (
                       <>
-                        <p style={{ color: "#8b949e", fontSize: "0.85rem", marginBottom: 8 }}>
+                        <p
+                          style={{
+                            color: "#8b949e",
+                            fontSize: "0.85rem",
+                            marginBottom: 8,
+                          }}
+                        >
                           {noBindingUserName}، حسابك غير مرتبط بـ Telegram.
                         </p>
-                        <p style={{ color: "#8b949e", fontSize: "0.8rem", marginBottom: 12 }}>
-                          يمكنك طلب مساعدة الأدمن لإعادة تعيين كلمة المرور يدوياً.
+                        <p
+                          style={{
+                            color: "#8b949e",
+                            fontSize: "0.8rem",
+                            marginBottom: 12,
+                          }}
+                        >
+                          يمكنك طلب مساعدة الأدمن لإعادة تعيين كلمة المرور
+                          يدوياً.
                         </p>
                         <button
                           onClick={async () => {
                             setLoading(true);
                             try {
-                              const res = await fetch("/api/admin/bot-control/assistance-request", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ identifier: forgotIdentifier }),
-                              });
+                              const res = await fetch(
+                                "/api/admin/bot-control/assistance-request",
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    identifier: forgotIdentifier,
+                                  }),
+                                },
+                              );
                               const data = await res.json();
-                              if (data.success) { showToast("✅ تم إرسال طلب المساعدة", "success"); setForgotStep("identifier"); }
-                              else { setError(data.message || "فشل"); }
-                            } catch { setError("حدث خطأ"); }
-                            finally { setLoading(false); }}
-                          }
+                              if (data.success) {
+                                showToast(
+                                  "✅ تم إرسال طلب المساعدة",
+                                  "success",
+                                );
+                                setForgotStep("identifier");
+                              } else {
+                                setError(data.message || "فشل");
+                              }
+                            } catch {
+                              setError("حدث خطأ");
+                            } finally {
+                              setLoading(false);
+                            }
+                          }}
                           disabled={loading}
-                          style={{ ...btnStyle, background: "linear-gradient(135deg, #ffca28, #f0b400)", color: "#000", fontWeight: 800, opacity: loading ? 0.6 : 1 }}
+                          style={{
+                            ...btnStyle,
+                            background:
+                              "linear-gradient(135deg, #ffca28, #f0b400)",
+                            color: "#000",
+                            fontWeight: 800,
+                            opacity: loading ? 0.6 : 1,
+                          }}
                         >
                           {loading ? "⏳ جاري..." : "🆘 طلب مساعدة الأدمن"}
                         </button>
                       </>
                     )}
-                    <button onClick={() => { setForgotStep("identifier"); setError(""); }} style={{ ...btnStyle, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#8b949e", marginTop: 4 }}>
+                    <button
+                      onClick={() => {
+                        setForgotStep("identifier");
+                        setError("");
+                      }}
+                      style={{
+                        ...btnStyle,
+                        background: "transparent",
+                        border: "1px solid rgba(255,255,255,0.15)",
+                        color: "#8b949e",
+                        marginTop: 4,
+                      }}
+                    >
                       🔙 العودة
                     </button>
                   </>
@@ -1480,12 +1880,44 @@ export default function LoginPage() {
 
                 {forgotStep === "newPassword" && (
                   <>
-                    <input type="password" placeholder="كلمة المرور الجديدة" style={inputStyle} value={forgotNewPass} onChange={(e) => setForgotNewPass(e.target.value)} required />
-                    <input type="password" placeholder="تأكيد كلمة المرور الجديدة" style={inputStyle} value={forgotConfirmPass} onChange={(e) => setForgotConfirmPass(e.target.value)} required />
-                    <button onClick={handleForgotPassword} disabled={loading} style={{ ...btnStyle, background: "linear-gradient(135deg, #2188ff, #0066cc)", boxShadow: "0 6px 25px rgba(33,136,255,0.35)", opacity: loading ? 0.6 : 1 }}>
+                    <input
+                      type="password"
+                      placeholder="كلمة المرور الجديدة"
+                      style={inputStyle}
+                      value={forgotNewPass}
+                      onChange={(e) => setForgotNewPass(e.target.value)}
+                      required
+                    />
+                    <input
+                      type="password"
+                      placeholder="تأكيد كلمة المرور الجديدة"
+                      style={inputStyle}
+                      value={forgotConfirmPass}
+                      onChange={(e) => setForgotConfirmPass(e.target.value)}
+                      required
+                    />
+                    <button
+                      onClick={handleForgotPassword}
+                      disabled={loading}
+                      style={{
+                        ...btnStyle,
+                        background: "linear-gradient(135deg, #2188ff, #0066cc)",
+                        boxShadow: "0 6px 25px rgba(33,136,255,0.35)",
+                        opacity: loading ? 0.6 : 1,
+                      }}
+                    >
                       {loading ? "⏳ جاري الحفظ..." : "حفظ كلمة المرور"}
                     </button>
-                    <button onClick={() => setForgotStep("otp")} style={{ ...btnStyle, background: "transparent", border: "1px solid rgba(0,229,255,0.2)", color: "#00e5ff", marginTop: 8 }}>
+                    <button
+                      onClick={() => setForgotStep("otp")}
+                      style={{
+                        ...btnStyle,
+                        background: "transparent",
+                        border: "1px solid rgba(0,229,255,0.2)",
+                        color: "#00e5ff",
+                        marginTop: 8,
+                      }}
+                    >
                       → العودة
                     </button>
                   </>
@@ -1502,7 +1934,17 @@ export default function LoginPage() {
                     setForgotResetToken("");
                     setNoBindingUserName("");
                   }}
-                  style={{ display: "inline-block", marginTop: 15, color: "#00e5ff", cursor: "pointer", fontSize: "0.85rem", padding: "6px 14px", borderRadius: "20px", background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.2)" }}
+                  style={{
+                    display: "inline-block",
+                    marginTop: 15,
+                    color: "#00e5ff",
+                    cursor: "pointer",
+                    fontSize: "0.85rem",
+                    padding: "6px 14px",
+                    borderRadius: "20px",
+                    background: "rgba(0,229,255,0.06)",
+                    border: "1px solid rgba(0,229,255,0.2)",
+                  }}
                 >
                   ← العودة إلى تسجيل الدخول
                 </span>
@@ -1701,47 +2143,92 @@ export default function LoginPage() {
               fontWeight: 400,
               transition: "color 0.5s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
           >
-            تطوير وإشراف:{" "}
             <span
+              onClick={() => setShowTeam((p) => !p)}
               style={{
-                color: "rgba(255,255,255,0.35)",
-                fontWeight: 500,
-                cursor: "default",
-                transition: "color 0.4s, text-shadow 0.4s",
+                color: "rgba(255,255,255,0.3)",
+                cursor: "pointer",
+                transition: "color 0.4s",
+                userSelect: "none",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.color = "#00e5ff";
-                e.currentTarget.style.textShadow = "0 0 24px rgba(0,229,255,0.6), 0 0 48px rgba(0,229,255,0.2)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = "rgba(255,255,255,0.35)";
-                e.currentTarget.style.textShadow = "none";
+                e.currentTarget.style.color = "rgba(255,255,255,0.3)";
               }}
             >
-              محمد إبراهيم الديلمي
+              {showTeam ? "▲" : "▼"} فريق المطورين
             </span>
-            <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 3px" }}>|</span>
-            <span
-              style={{
-                color: "rgba(255,255,255,0.35)",
-                fontWeight: 500,
-                cursor: "default",
-                transition: "color 0.4s, text-shadow 0.4s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#00e5ff";
-                e.currentTarget.style.textShadow = "0 0 24px rgba(0,229,255,0.6), 0 0 48px rgba(0,229,255,0.2)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "rgba(255,255,255,0.35)";
-                e.currentTarget.style.textShadow = "none";
-              }}
-            >
-              أحمد الهيدمة
-            </span>
+
+            <AnimatePresence>
+              {showTeam && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                  animate={{ height: "auto", opacity: 1, marginTop: 8 }}
+                  exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                  style={{ overflow: "hidden", display: "flex", flexDirection: "column", gap: 4 }}
+                >
+                  {[
+                    { name: "محمد إبراهيم الديلمي", role: "Full Stack Developer" },
+                    { name: "أحمد الهيدمة", role: "Backend Developer" },
+                    { name: "عبدالجليل الجبلي", role: "مراجعة وتنظيم الملفات" },
+                    { name: "أسامة شرهان", role: "الأمن السيبراني" },
+                  ].map((m, i) => (
+                    <motion.div
+                      key={m.name}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.08, duration: 0.3 }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: "rgba(255,255,255,0.12)",
+                          fontSize: "0.65rem",
+                        }}
+                      >
+                        •
+                      </span>
+                      <span
+                        style={{
+                          color: "rgba(255,255,255,0.35)",
+                          fontWeight: 500,
+                          cursor: "default",
+                          transition: "color 0.4s, text-shadow 0.4s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = "#00e5ff";
+                          e.currentTarget.style.textShadow =
+                            "0 0 24px rgba(0,229,255,0.6), 0 0 48px rgba(0,229,255,0.2)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = "rgba(255,255,255,0.35)";
+                          e.currentTarget.style.textShadow = "none";
+                        }}
+                      >
+                        {m.name}
+                      </span>
+                      <span
+                        style={{
+                          color: "rgba(255,255,255,0.15)",
+                          fontSize: "clamp(0.45rem, 0.8vw, 0.6rem)",
+                        }}
+                      >
+                        {m.role}
+                      </span>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <div
             style={{
@@ -1752,8 +2239,12 @@ export default function LoginPage() {
               letterSpacing: "0.5px",
               transition: "color 0.5s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.15)")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = "rgba(255,255,255,0.3)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "rgba(255,255,255,0.15)")
+            }
           >
             OFFICIAL CYBER SECURITY PLATFORM — DHAMAR UNIVERSITY &copy; 2026
           </div>

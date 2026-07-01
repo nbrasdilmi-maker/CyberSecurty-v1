@@ -23,14 +23,16 @@ const ROLES = [
     id: "admin",
     title: "الأدمن",
     icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
-    description: "المشرف العام على النظام — صلاحية كاملة لإدارة المستخدمين، المواد، والإعدادات",
+    description:
+      "المشرف العام على النظام — صلاحية كاملة لإدارة المستخدمين، المواد، والإعدادات",
     gradient: "linear-gradient(135deg, #c62828, #e53935)",
   },
   {
     id: "management",
     title: "الإدارة",
     icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
-    description: "مسؤول عن مستوى دراسي — يدير المواد، يراقب الطلاب، وينسق العملية التعليمية",
+    description:
+      "مسؤول عن مستوى دراسي — يدير المواد، يراقب الطلاب، وينسق العملية التعليمية",
     gradient: "linear-gradient(135deg, #e65100, #fb8c00)",
   },
   {
@@ -44,7 +46,8 @@ const ROLES = [
     id: "student",
     title: "الطالب",
     icon: "M12 14l9-5-9-5-9 5 9 5zm0 7l-7-4v-5l7 4 7-4v5l-7 4z",
-    description: "يرفع التكاليف، يتواصل مع المعلمين، يتصفح المكتبة ويتابع درجاته",
+    description:
+      "يرفع التكاليف، يتواصل مع المعلمين، يتصفح المكتبة ويتابع درجاته",
     gradient: "linear-gradient(135deg, #2e7d32, #66bb6a)",
   },
 ];
@@ -98,24 +101,60 @@ const FEATURES = [
 ];
 
 const ACTIVATION_STEPS = [
-  { num: 1, title: "الحصول على كود التفعيل", desc: "تستلم كود التفعيل من إدارة النظام (8 أحرف)" },
-  { num: 2, title: "إدخال الكود", desc: "تدخل كود التفعيل في صفحة تفعيل الحساب" },
-  { num: 3, title: "تعيين كلمة المرور", desc: "تختار اسم مستخدم وكلمة مرور قوية (8 أحرف على الأقل)" },
-  { num: 4, title: "ربط Telegram (اختياري)", desc: "تربط حسابك مع البوت لاستعادة كلمة المرور بسهولة" },
+  {
+    num: 1,
+    title: "الحصول على كود التفعيل",
+    desc: "تستلم كود التفعيل من إدارة النظام (8 أحرف)",
+  },
+  {
+    num: 2,
+    title: "إدخال الكود",
+    desc: "تدخل كود التفعيل في صفحة تفعيل الحساب",
+  },
+  {
+    num: 3,
+    title: "تعيين كلمة المرور",
+    desc: "تختار اسم مستخدم وكلمة مرور قوية (8 أحرف على الأقل)",
+  },
+  {
+    num: 4,
+    title: "ربط Telegram (اختياري)",
+    desc: "تربط حسابك مع البوت لاستعادة كلمة المرور بسهولة",
+  },
 ];
 
 const BOT_STEPS = [
-  { num: 1, title: "افتح البوت", desc: "@cyber_security_cloud_bot على Telegram" },
+  {
+    num: 1,
+    title: "افتح البوت",
+    desc: "@cyber_security_cloud_bot على Telegram",
+  },
   { num: 2, title: "اطلب الربط", desc: "أرسل /bind في محادثة البوت" },
   { num: 3, title: "انسخ الكود", desc: "سيرسل لك البوت كود ربط — انسخه" },
-  { num: 4, title: "أدخل الكود في الموقع", desc: "الصق الكود في صفحة ربط الحساب واكتمل الربط" },
+  {
+    num: 4,
+    title: "أدخل الكود في الموقع",
+    desc: "الصق الكود في صفحة ربط الحساب واكتمل الربط",
+  },
 ];
 
 const RESET_STEPS = [
-  { num: 1, title: "ادخل معرفك", desc: "أدخل اسم المستخدم أو البريد الإلكتروني" },
-  { num: 2, title: "اختر طريقة الاستعادة", desc: "OTP عبر البريد أو رابط من بوت Telegram" },
+  {
+    num: 1,
+    title: "ادخل معرفك",
+    desc: "أدخل اسم المستخدم أو البريد الإلكتروني",
+  },
+  {
+    num: 2,
+    title: "اختر طريقة الاستعادة",
+    desc: "OTP عبر البريد أو رابط من بوت Telegram",
+  },
   { num: 3, title: "تحقق من هويتك", desc: "أدخل كود OTP أو استخدم رابط البوت" },
-  { num: 4, title: "عيّن كلمة مرور جديدة", desc: "أدخل كلمة مرور جديدة وقم بتأكيدها" },
+  {
+    num: 4,
+    title: "عيّن كلمة مرور جديدة",
+    desc: "أدخل كلمة مرور جديدة وقم بتأكيدها",
+  },
 ];
 
 // ===================== SECTION WRAPPER =====================
@@ -137,8 +176,13 @@ function SectionWrapper({
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
-      { threshold: 0.1 }
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -168,7 +212,10 @@ function isLowEndDevice(): boolean {
   return cores !== undefined && cores <= 4;
 }
 
-const OnboardingScene = dynamic(() => import("@/components/effects/OnboardingScene"), { ssr: false });
+const OnboardingScene = dynamic(
+  () => import("@/components/effects/OnboardingScene"),
+  { ssr: false },
+);
 
 export function HeroSection() {
   const router = useRouter();
@@ -196,7 +243,9 @@ export function HeroSection() {
       <div className="absolute inset-0 quantum-grid z-0" />
 
       {use3D && globeReady && (
-        <div style={{ position: "absolute", inset: 0, zIndex: 1, opacity: 0.4 }}>
+        <div
+          style={{ position: "absolute", inset: 0, zIndex: 1, opacity: 0.4 }}
+        >
           <OnboardingScene showCard={false} />
         </div>
       )}
@@ -204,7 +253,8 @@ export function HeroSection() {
       <div
         className="absolute inset-0 z-0"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(0,229,255,0.06) 0%, transparent 70%)",
+          background:
+            "radial-gradient(ellipse at center, rgba(0,229,255,0.06) 0%, transparent 70%)",
         }}
       />
 
@@ -240,8 +290,7 @@ export function HeroSection() {
             textShadow: "0 0 40px rgba(0,229,255,0.3)",
           }}
         >
-          سحابة{" "}
-          <span style={{ color: COLORS.cyan }}>الأمن السيبراني</span>
+          سحابة <span style={{ color: COLORS.cyan }}>الأمن السيبراني</span>
         </h1>
 
         <p
@@ -260,7 +309,14 @@ export function HeroSection() {
           في منصة واحدة مؤمّنة بأعلى معايير الحماية الرقمية
         </p>
 
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
           <button
             onClick={() => router.push("/login")}
             style={{
@@ -276,7 +332,9 @@ export function HeroSection() {
               boxShadow: "0 8px 30px rgba(0,229,255,0.3)",
               transition: "transform 0.2s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.transform = "scale(1.05)")
+            }
             onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
             🚀 تسجيل الدخول
@@ -284,7 +342,9 @@ export function HeroSection() {
 
           <button
             onClick={() => {
-              document.getElementById("stats-section")?.scrollIntoView({ behavior: "smooth" });
+              document
+                .getElementById("stats-section")
+                ?.scrollIntoView({ behavior: "smooth" });
             }}
             style={{
               padding: "14px 36px",
@@ -298,7 +358,9 @@ export function HeroSection() {
               fontFamily: "'Cairo', sans-serif",
               transition: "transform 0.2s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.transform = "scale(1.05)")
+            }
             onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
             اكتشف المنصة ↓
@@ -310,7 +372,13 @@ export function HeroSection() {
 }
 
 // ===================== STATS =====================
-function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: string }) {
+function AnimatedCounter({
+  value,
+  suffix = "",
+}: {
+  value: number;
+  suffix?: string;
+}) {
   const [display, setDisplay] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const [started, setStarted] = useState(false);
@@ -325,7 +393,7 @@ function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: strin
           observer.disconnect();
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -349,7 +417,8 @@ function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: strin
 
   return (
     <span ref={ref} style={{ fontSize: "inherit", fontWeight: "inherit" }}>
-      {display}{suffix}
+      {display}
+      {suffix}
     </span>
   );
 }
@@ -360,7 +429,9 @@ export function StatsSection() {
   useEffect(() => {
     fetch("/api/stats")
       .then((r) => r.json())
-      .then((d) => { if (d.success) setStats(d.data); })
+      .then((d) => {
+        if (d.success) setStats(d.data);
+      })
       .catch(() => {});
   }, []);
 
@@ -373,7 +444,7 @@ export function StatsSection() {
       { label: "التكاليف", key: "totalAssignments", color: COLORS.red },
       { label: "مقيدين بالبوت", key: "totalBindings", color: COLORS.cyan },
     ],
-    []
+    [],
   );
 
   return (
@@ -396,7 +467,9 @@ export function StatsSection() {
         >
           المنصة بأرقام
         </h2>
-        <p style={{ color: COLORS.muted, fontSize: "0.9rem", marginBottom: 40 }}>
+        <p
+          style={{ color: COLORS.muted, fontSize: "0.9rem", marginBottom: 40 }}
+        >
           إحصائيات حقيقية من قاعدة البيانات
         </p>
 
@@ -418,10 +491,23 @@ export function StatsSection() {
                 backdropFilter: "blur(10px)",
               }}
             >
-              <div style={{ fontSize: "2rem", fontWeight: 900, color: item.color, fontFamily: "'Orbitron', sans-serif" }}>
+              <div
+                style={{
+                  fontSize: "2rem",
+                  fontWeight: 900,
+                  color: item.color,
+                  fontFamily: "'Orbitron', sans-serif",
+                }}
+              >
                 {stats ? <AnimatedCounter value={stats[item.key] || 0} /> : "—"}
               </div>
-              <div style={{ color: COLORS.muted, fontSize: "0.85rem", marginTop: 4 }}>
+              <div
+                style={{
+                  color: COLORS.muted,
+                  fontSize: "0.85rem",
+                  marginTop: 4,
+                }}
+              >
                 {item.label}
               </div>
             </div>
@@ -446,10 +532,19 @@ export function RolesSection() {
           textAlign: "center",
         }}
       >
-        <h2 style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)", color: "#fff", fontWeight: 800, marginBottom: 8 }}>
+        <h2
+          style={{
+            fontSize: "clamp(1.5rem, 4vw, 2rem)",
+            color: "#fff",
+            fontWeight: 800,
+            marginBottom: 8,
+          }}
+        >
           هويات المستخدمين
         </h2>
-        <p style={{ color: COLORS.muted, fontSize: "0.9rem", marginBottom: 40 }}>
+        <p
+          style={{ color: COLORS.muted, fontSize: "0.9rem", marginBottom: 40 }}
+        >
           أربعة أدوار رئيسية في المنصة لكل دوره ومهامه
         </p>
 
@@ -466,14 +561,18 @@ export function RolesSection() {
               onMouseEnter={() => setActive(role.id)}
               onMouseLeave={() => setActive(null)}
               style={{
-                background: active === role.id ? "rgba(13,17,23,0.9)" : COLORS.glass,
+                background:
+                  active === role.id ? "rgba(13,17,23,0.9)" : COLORS.glass,
                 border: `1px solid ${active === role.id ? COLORS.cyan : COLORS.border}`,
                 borderRadius: "20px",
                 padding: "28px 20px",
                 cursor: "default",
                 transition: "all 0.3s ease",
                 transform: active === role.id ? "translateY(-6px)" : "none",
-                boxShadow: active === role.id ? `0 12px 40px rgba(0,229,255,0.15)` : "none",
+                boxShadow:
+                  active === role.id
+                    ? `0 12px 40px rgba(0,229,255,0.15)`
+                    : "none",
                 backdropFilter: "blur(10px)",
               }}
             >
@@ -489,15 +588,38 @@ export function RolesSection() {
                   margin: "0 auto 16px",
                 }}
               >
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="28"
+                  height="28"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d={role.icon} />
                 </svg>
               </div>
 
-              <h3 style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 700, margin: "0 0 8px" }}>
+              <h3
+                style={{
+                  color: "#fff",
+                  fontSize: "1.1rem",
+                  fontWeight: 700,
+                  margin: "0 0 8px",
+                }}
+              >
                 {role.title}
               </h3>
-              <p style={{ color: COLORS.muted, fontSize: "0.85rem", lineHeight: 1.6, margin: 0 }}>
+              <p
+                style={{
+                  color: COLORS.muted,
+                  fontSize: "0.85rem",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
                 {role.description}
               </p>
             </div>
@@ -520,10 +642,19 @@ export function FeaturesSection() {
           textAlign: "center",
         }}
       >
-        <h2 style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)", color: "#fff", fontWeight: 800, marginBottom: 8 }}>
+        <h2
+          style={{
+            fontSize: "clamp(1.5rem, 4vw, 2rem)",
+            color: "#fff",
+            fontWeight: 800,
+            marginBottom: 8,
+          }}
+        >
           مميزات المنصة
         </h2>
-        <p style={{ color: COLORS.muted, fontSize: "0.9rem", marginBottom: 40 }}>
+        <p
+          style={{ color: COLORS.muted, fontSize: "0.9rem", marginBottom: 40 }}
+        >
           كل ما تحتاجه في بيئة تعليمية متكاملة
         </p>
 
@@ -555,11 +686,27 @@ export function FeaturesSection() {
                 e.currentTarget.style.transform = "none";
               }}
             >
-              <div style={{ fontSize: "1.8rem", marginBottom: 8 }}>{f.icon}</div>
-              <h3 style={{ color: "#fff", fontSize: "1rem", fontWeight: 700, margin: "0 0 6px" }}>
+              <div style={{ fontSize: "1.8rem", marginBottom: 8 }}>
+                {f.icon}
+              </div>
+              <h3
+                style={{
+                  color: "#fff",
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  margin: "0 0 6px",
+                }}
+              >
                 {f.title}
               </h3>
-              <p style={{ color: COLORS.muted, fontSize: "0.82rem", lineHeight: 1.6, margin: 0 }}>
+              <p
+                style={{
+                  color: COLORS.muted,
+                  fontSize: "0.82rem",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
                 {f.desc}
               </p>
             </div>
@@ -571,7 +718,15 @@ export function FeaturesSection() {
 }
 
 // ===================== PROCESS STEPS =====================
-function StepCard({ num, title, desc }: { num: number; title: string; desc: string }) {
+function StepCard({
+  num,
+  title,
+  desc,
+}: {
+  num: number;
+  title: string;
+  desc: string;
+}) {
   return (
     <div
       style={{
@@ -604,10 +759,24 @@ function StepCard({ num, title, desc }: { num: number; title: string; desc: stri
         {num}
       </div>
       <div>
-        <h4 style={{ color: "#fff", fontSize: "0.95rem", fontWeight: 700, margin: "0 0 4px" }}>
+        <h4
+          style={{
+            color: "#fff",
+            fontSize: "0.95rem",
+            fontWeight: 700,
+            margin: "0 0 4px",
+          }}
+        >
           {title}
         </h4>
-        <p style={{ color: COLORS.muted, fontSize: "0.82rem", margin: 0, lineHeight: 1.5 }}>
+        <p
+          style={{
+            color: COLORS.muted,
+            fontSize: "0.82rem",
+            margin: 0,
+            lineHeight: 1.5,
+          }}
+        >
           {desc}
         </p>
       </div>
@@ -626,10 +795,19 @@ function ProcessGroup({
 }) {
   return (
     <div style={{ flex: 1, minWidth: 280 }}>
-      <h3 style={{ color: COLORS.cyan, fontSize: "1.1rem", fontWeight: 700, marginBottom: 4 }}>
+      <h3
+        style={{
+          color: COLORS.cyan,
+          fontSize: "1.1rem",
+          fontWeight: 700,
+          marginBottom: 4,
+        }}
+      >
         {title}
       </h3>
-      <p style={{ color: COLORS.muted, fontSize: "0.82rem", marginBottom: 16 }}>{subtitle}</p>
+      <p style={{ color: COLORS.muted, fontSize: "0.82rem", marginBottom: 16 }}>
+        {subtitle}
+      </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {steps.map((s) => (
           <StepCard key={s.num} {...s} />
@@ -650,10 +828,19 @@ export function ProcessSection() {
           textAlign: "center",
         }}
       >
-        <h2 style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)", color: "#fff", fontWeight: 800, marginBottom: 8 }}>
+        <h2
+          style={{
+            fontSize: "clamp(1.5rem, 4vw, 2rem)",
+            color: "#fff",
+            fontWeight: 800,
+            marginBottom: 8,
+          }}
+        >
           كيفية العمل
         </h2>
-        <p style={{ color: COLORS.muted, fontSize: "0.9rem", marginBottom: 40 }}>
+        <p
+          style={{ color: COLORS.muted, fontSize: "0.9rem", marginBottom: 40 }}
+        >
           كل ما تحتاج معرفته للبدء في المنصة
         </p>
 
@@ -666,9 +853,21 @@ export function ProcessSection() {
             textAlign: "right",
           }}
         >
-          <ProcessGroup title="🔐 تفعيل الحساب" subtitle="4 خطوات لتفعيل حسابك" steps={ACTIVATION_STEPS} />
-          <ProcessGroup title="🤖 ربط Telegram" subtitle="اربط حسابك لاستعادة كلمة المرور بسهولة" steps={BOT_STEPS} />
-          <ProcessGroup title="🔑 استعادة كلمة المرور" subtitle="3 خطوات لاستعادة كلمة المرور" steps={RESET_STEPS} />
+          <ProcessGroup
+            title="🔐 تفعيل الحساب"
+            subtitle="4 خطوات لتفعيل حسابك"
+            steps={ACTIVATION_STEPS}
+          />
+          <ProcessGroup
+            title="🤖 ربط Telegram"
+            subtitle="اربط حسابك لاستعادة كلمة المرور بسهولة"
+            steps={BOT_STEPS}
+          />
+          <ProcessGroup
+            title="🔑 استعادة كلمة المرور"
+            subtitle="3 خطوات لاستعادة كلمة المرور"
+            steps={RESET_STEPS}
+          />
         </div>
       </div>
     </SectionWrapper>
@@ -689,6 +888,18 @@ const TEAM = [
     bio: "طالب في الأمن السيبراني — المستوى الثاني. متخصص في قواعد البيانات وأمن الشبكات.",
     color: COLORS.purple,
   },
+  {
+    name: "عبدالجليل الجبلي",
+    role: "مراجعة وتنظيم الملفات",
+    bio: "طالب في الأمن السيبراني — المستوى الثاني. متخصص في تنظيم وإدارة ملفات المشروع.",
+    color: COLORS.green,
+  },
+  {
+    name: "أسامة شرهان",
+    role: "الأمن السيبراني",
+    bio: "طالب في الأمن السيبراني — المستوى الثاني. مهتم بأمن الشبكات واختبار الاختراق.",
+    color: COLORS.green,
+  },
 ];
 
 export function TeamSection() {
@@ -702,10 +913,19 @@ export function TeamSection() {
           textAlign: "center",
         }}
       >
-        <h2 style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)", color: "#fff", fontWeight: 800, marginBottom: 8 }}>
+        <h2
+          style={{
+            fontSize: "clamp(1.5rem, 4vw, 2rem)",
+            color: "#fff",
+            fontWeight: 800,
+            marginBottom: 8,
+          }}
+        >
           فريق التطوير
         </h2>
-        <p style={{ color: COLORS.muted, fontSize: "0.9rem", marginBottom: 40 }}>
+        <p
+          style={{ color: COLORS.muted, fontSize: "0.9rem", marginBottom: 40 }}
+        >
           طلاب الأمن السيبراني — جامعة ذمار
         </p>
 
@@ -749,13 +969,34 @@ export function TeamSection() {
               >
                 {member.name.charAt(0)}
               </div>
-              <h3 style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 700, margin: "0 0 4px" }}>
+              <h3
+                style={{
+                  color: "#fff",
+                  fontSize: "1.1rem",
+                  fontWeight: 700,
+                  margin: "0 0 4px",
+                }}
+              >
                 {member.name}
               </h3>
-              <p style={{ color: member.color, fontSize: "0.85rem", fontWeight: 600, margin: "0 0 10px" }}>
+              <p
+                style={{
+                  color: member.color,
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  margin: "0 0 10px",
+                }}
+              >
                 {member.role}
               </p>
-              <p style={{ color: COLORS.muted, fontSize: "0.82rem", lineHeight: 1.6, margin: 0 }}>
+              <p
+                style={{
+                  color: COLORS.muted,
+                  fontSize: "0.82rem",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
                 {member.bio}
               </p>
             </div>
@@ -795,15 +1036,32 @@ export function CTASection() {
             style={{
               position: "absolute",
               inset: 0,
-              background: "radial-gradient(ellipse at center, rgba(0,229,255,0.06) 0%, transparent 70%)",
+              background:
+                "radial-gradient(ellipse at center, rgba(0,229,255,0.06) 0%, transparent 70%)",
               pointerEvents: "none",
             }}
           />
 
-          <h2 style={{ fontSize: "clamp(1.4rem, 4vw, 1.8rem)", color: "#fff", fontWeight: 800, marginBottom: 12, position: "relative" }}>
+          <h2
+            style={{
+              fontSize: "clamp(1.4rem, 4vw, 1.8rem)",
+              color: "#fff",
+              fontWeight: 800,
+              marginBottom: 12,
+              position: "relative",
+            }}
+          >
             هل أنت مستعد؟
           </h2>
-          <p style={{ color: COLORS.muted, fontSize: "0.95rem", marginBottom: 28, position: "relative", lineHeight: 1.7 }}>
+          <p
+            style={{
+              color: COLORS.muted,
+              fontSize: "0.95rem",
+              marginBottom: 28,
+              position: "relative",
+              lineHeight: 1.7,
+            }}
+          >
             رحلتك التعليمية تبدأ الآن. سجّل الدخول واستفد من كل مميزات المنصة.
           </p>
           <button
@@ -822,7 +1080,9 @@ export function CTASection() {
               position: "relative",
               transition: "transform 0.2s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.transform = "scale(1.05)")
+            }
             onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
             🚀 ابدأ الآن
