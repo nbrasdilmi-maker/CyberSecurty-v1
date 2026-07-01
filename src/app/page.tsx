@@ -398,6 +398,8 @@ export default function HomePage() {
             <span className="name-glow">عبدالجليل الجبلي</span>
             <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 4px" }}>|</span>
             <span className="name-glow">أسامة شرهان</span>
+            <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 4px" }}>|</span>
+            <span className="name-glow">قناف العجيبي</span>
           </div>
         </footer>
       </div>

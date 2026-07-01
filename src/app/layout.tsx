@@ -21,6 +21,7 @@ export const metadata: Metadata = {
     { name: "أحمد الهيدمة" },
     { name: "عبدالجليل الجبلي" },
     { name: "أسامة شرهان" },
+    { name: "قناف العجيبي" },
   ],
   openGraph: {
     title: "سحابة الأمن السيبراني",

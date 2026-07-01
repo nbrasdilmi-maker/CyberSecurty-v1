@@ -2172,31 +2172,18 @@ export default function LoginPage() {
                   style={{ overflow: "hidden", display: "flex", flexDirection: "column", gap: 4 }}
                 >
                   {[
-                    { name: "محمد إبراهيم الديلمي", role: "Full Stack Developer" },
-                    { name: "أحمد الهيدمة", role: "Backend Developer" },
-                    { name: "عبدالجليل الجبلي", role: "مراجعة وتنظيم الملفات" },
-                    { name: "أسامة شرهان", role: "الأمن السيبراني" },
-                  ].map((m, i) => (
+                    "محمد إبراهيم الديلمي",
+                    "أحمد الهيدمة",
+                    "عبدالجليل الجبلي",
+                    "أسامة شرهان",
+                    "قناف العجيبي",
+                  ].map((name, i) => (
                     <motion.div
-                      key={m.name}
+                      key={name}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.08, duration: 0.3 }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        flexWrap: "wrap",
-                      }}
                     >
-                      <span
-                        style={{
-                          color: "rgba(255,255,255,0.12)",
-                          fontSize: "0.65rem",
-                        }}
-                      >
-                        •
-                      </span>
                       <span
                         style={{
                           color: "rgba(255,255,255,0.35)",
@@ -2214,15 +2201,7 @@ export default function LoginPage() {
                           e.currentTarget.style.textShadow = "none";
                         }}
                       >
-                        {m.name}
-                      </span>
-                      <span
-                        style={{
-                          color: "rgba(255,255,255,0.15)",
-                          fontSize: "clamp(0.45rem, 0.8vw, 0.6rem)",
-                        }}
-                      >
-                        {m.role}
+                        {name}
                       </span>
                     </motion.div>
                   ))}
