@@ -132,12 +132,9 @@ export class BotService {
             `يمكنك الآن استخدام الموقع لإعادة تعيين كلمة المرور عند الحاجة.\n` +
             `سيتم إرسال أكواد التحقق إلى هذا البوت.`,
         );
-        // إرسال رسالة منفصلة تحتوي على رمز التحقق (سيتم حذفها تلقائياً)
+        // إرسال بطاقة رمز التحقق (قابلة للنسخ + زر حذف + حذف تلقائي بعد 3 د)
         try {
-          const codeMsg = await ctx.reply(`🔐 رمز التحقق الخاص بك: ${result.otp}\n\n⏳ سينتهي هذا الرمز بعد 3 دقائق`);
-          setTimeout(async () => {
-            try { await ctx.api.deleteMessage(ctx.chat!.id, codeMsg.message_id); } catch {}
-          }, 180000);
+          await this.sendOtpCard(ctx.chat!.id, result.otp);
         } catch {}
         return;
       }
@@ -186,6 +183,17 @@ export class BotService {
         await tigService.deleteBindCode(code);
         await ctx.reply("❌ تم إلغاء عملية الربط. يمكنك إنشاء كود جديد من الإعدادات.");
       }
+    });
+
+    // ---- Delete buttons handlers ----
+    this._bot.callbackQuery("delete_notification", async (ctx) => {
+      await ctx.answerCallbackQuery({ text: "✅ تم حذف الإشعار" });
+      try { await ctx.deleteMessage(); } catch {}
+    });
+
+    this._bot.callbackQuery("delete_otp", async (ctx) => {
+      await ctx.answerCallbackQuery({ text: "✅ تم حذف الكود" });
+      try { await ctx.deleteMessage(); } catch {}
     });
 
     // ---- Main message handler (accepts only TIG codes) ----
@@ -276,17 +284,31 @@ export class BotService {
     );
   }
 
-  async sendTempCode(chatId: bigint, otp: string): Promise<void> {
+  async sendOtpCard(chatId: number | bigint, otp: string): Promise<void> {
     try {
-      const codeMsg = await this._bot.api.sendMessage(
-        Number(chatId),
-        `🔐 رمز التحقق الخاص بك: ${otp}\n\n⏳ سينتهي هذا الرمز بعد 3 دقائق`
-      );
+      const cId = Number(chatId);
+      const message =
+        `🔐 <b>رمز التحقق</b>\n` +
+        `━━━━━━━━━━━━━━\n\n` +
+        `لقد طلبت رمز تحقق لإعادة تعيين كلمة المرور.\n\n` +
+        `<code>${otp}</code>  ← اضغط للنسخ\n\n` +
+        `⏳ <i>سينتهي هذا الرمز بعد 3 دقائق</i>\n` +
+        `⚠️ لا تشارك هذا الرمز مع أي أحد`;
+
+      const codeMsg = await this._bot.api.sendMessage(cId, message, {
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🗑️ حذف", callback_data: "delete_otp" }],
+          ],
+        },
+      });
       setTimeout(async () => {
-        try { await this._bot.api.deleteMessage(Number(chatId), codeMsg.message_id); } catch {}
+        try { await this._bot.api.deleteMessage(cId, codeMsg.message_id); } catch {}
       }, 180000);
     } catch (err) {
-      logger.error("[BotService] sendTempCode failed", { error: String(err) });
+      logger.error("[BotService] sendOtpCard failed", { error: String(err) });
+      throw err;
     }
   }
 

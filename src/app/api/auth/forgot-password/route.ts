@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { passwordResetRateLimiter } from "@/lib/ratelimit";
 import { tigService } from "@/services/tig/TigService";
-import { getBot } from "@/lib/tig/telegram";
+import { botService } from "@/services/tig/BotService";
 import { z } from "zod";
 import { withErrorHandler } from "@/lib/errors";
 import { logger } from "@/lib/logger";
@@ -40,15 +40,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
     const { otp } = await tigService.sendPasswordResetOtp(user.id, user.email, binding.chatId);
     try {
-      const bot = getBot();
-      const codeMsg = await bot.api.sendMessage(
-        Number(binding.chatId),
-        `🔐 رمز التحقق الخاص بك: ${otp}\n\n⏳ سينتهي هذا الرمز بعد 3 دقائق`,
-      );
-      setTimeout(async () => {
-        try { await bot.api.deleteMessage(Number(binding.chatId), codeMsg.message_id); } catch {}
-      }, 180000);
-      await bot.api.sendMessage(
+      await botService.sendOtpCard(binding.chatId, otp);
+      await botService.getBot().api.sendMessage(
         Number(binding.chatId),
         `📩 تم إرسال رمز التحقق إلى حسابك في التليجرام.\nالرجاء إدخال الرمز في نافذة استعادة كلمة المرور خلال 3 دقائق.`,
       );
