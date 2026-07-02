@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import { getBot } from "@/lib/tig/telegram";
 import { logger } from "@/lib/logger";
 
@@ -10,17 +9,14 @@ interface NotificationPayload {
   linkUrl?: string;
 }
 
-export async function sendTelegramNotification(data: NotificationPayload): Promise<void> {
+export async function sendTelegramNotification(
+  data: NotificationPayload,
+  chatId?: number,
+): Promise<void> {
   try {
-    const binding = await prisma.telegramBinding.findUnique({
-      where: { userId: data.userId },
-      select: { chatId: true, status: true },
-    });
-
-    if (!binding || binding.status !== "ACTIVE") return;
+    if (!chatId) return;
 
     const bot = getBot();
-    const chatId = Number(binding.chatId);
     const now = new Date();
 
     const dateStr = now.toLocaleDateString("ar-SA", {
