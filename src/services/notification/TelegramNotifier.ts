@@ -1,5 +1,6 @@
 import { getBot } from "@/lib/tig/telegram";
 import { logger } from "@/lib/logger";
+import { APP_CONFIG } from "@/config";
 
 interface NotificationPayload {
   userId: string;
@@ -42,7 +43,8 @@ export async function sendTelegramNotification(
     const inlineKeyboard: any[] = [];
 
     if (data.linkUrl) {
-      inlineKeyboard.push([{ text: "📍 الانتقال إلى المنصة", url: data.linkUrl }]);
+      const url = data.linkUrl.startsWith("/") ? `${APP_CONFIG.url}${data.linkUrl}` : data.linkUrl;
+      inlineKeyboard.push([{ text: "📍 الانتقال إلى المنصة", url }]);
     }
 
     inlineKeyboard.push([{ text: "🗑️ حذف الإشعار", callback_data: "delete_notification" }]);
