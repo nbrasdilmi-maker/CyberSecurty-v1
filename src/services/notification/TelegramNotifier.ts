@@ -43,7 +43,8 @@ export async function sendTelegramNotification(
     const inlineKeyboard: any[] = [];
 
     if (data.linkUrl) {
-      const url = data.linkUrl.startsWith("/") ? `${APP_CONFIG.url}${data.linkUrl}` : data.linkUrl;
+      const baseUrl = APP_CONFIG.url.trim();
+      const url = data.linkUrl.startsWith("/") ? `${baseUrl}${data.linkUrl}` : data.linkUrl;
       inlineKeyboard.push([{ text: "📍 الانتقال إلى المنصة", url }]);
     }
 
