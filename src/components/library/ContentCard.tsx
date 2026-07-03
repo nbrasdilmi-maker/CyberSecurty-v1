@@ -335,28 +335,53 @@ const ContentCard = ({
           }}
         >
           {item.type !== "YOUTUBE_LINK" && item.fileUrl && (
-            <a
-              href={item.fileUrl}
-              download
-              style={{
-                flex: 1,
-                textAlign: "center",
-                textDecoration: "none",
-                padding: "10px",
-                borderRadius: "10px",
-                background: "rgba(0,229,255,0.08)",
-                border: "1px solid rgba(0,229,255,0.2)",
-                color: "#00e5ff",
-                fontWeight: 700,
-                fontSize: "0.8rem",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-              }}
-            >
-              <DownloadIcon /> تحميل
-            </a>
+            <>
+              <a
+                href={item.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1,
+                  textAlign: "center",
+                  textDecoration: "none",
+                  padding: "10px",
+                  borderRadius: "10px",
+                  background: "rgba(0,229,255,0.08)",
+                  border: "1px solid rgba(0,229,255,0.2)",
+                  color: "#00e5ff",
+                  fontWeight: 700,
+                  fontSize: "0.8rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                }}
+              >
+                👁 فتح
+              </a>
+              <a
+                href={`${item.fileUrl}?ik-attachment=true`}
+                download
+                style={{
+                  flex: 1,
+                  textAlign: "center",
+                  textDecoration: "none",
+                  padding: "10px",
+                  borderRadius: "10px",
+                  background: "rgba(46,160,67,0.08)",
+                  border: "1px solid rgba(46,160,67,0.2)",
+                  color: "#2ea043",
+                  fontWeight: 700,
+                  fontSize: "0.8rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                }}
+              >
+                <DownloadIcon /> تحميل
+              </a>
+            </>
           )}
 
           {item.type === "YOUTUBE_LINK" &&

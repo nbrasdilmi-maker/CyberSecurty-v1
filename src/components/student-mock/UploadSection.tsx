@@ -36,7 +36,8 @@ const fileIcon = (name: string) => {
   if (ext === "pdf") return "\u{1F4C4}";
   if (["doc", "docx"].includes(ext || "")) return "\u{1F4DD}";
   if (["zip", "rar", "7z"].includes(ext || "")) return "\u{1F4E6}";
-  if (["png", "jpg", "jpeg", "gif", "svg"].includes(ext || "")) return "\u{1F5BC}\uFE0F";
+  if (["png", "jpg", "jpeg", "gif", "svg"].includes(ext || ""))
+    return "\u{1F5BC}\uFE0F";
   return "\u{1F4CE}";
 };
 
@@ -76,7 +77,16 @@ export default function UploadSection({
           gap: "10px",
         }}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#0ea5e9"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
           <polyline points="17 8 12 3 7 8" />
           <line x1="12" y1="3" x2="12" y2="15" />
@@ -96,7 +106,7 @@ export default function UploadSection({
             letterSpacing: "0.3px",
           }}
         >
-          ⚡ اختر المادة (استخدم عجلة الفأرة أو اللمس)
+          ⚡ اختر المادة ( قبل رفع التكليف قم بتسمية الملف باسمك )
         </label>
         <VerticalWheelPicker
           items={subjects}
@@ -107,9 +117,17 @@ export default function UploadSection({
 
       <div style={{ marginBottom: "16px" }}>
         <motion.div
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
           onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) onFileChange(f); }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            const f = e.dataTransfer.files[0];
+            if (f) onFileChange(f);
+          }}
           onClick={() => !uploading && fileRef.current?.click()}
           onMouseEnter={() => setDndHover(true)}
           onMouseLeave={() => setDndHover(false)}
@@ -121,11 +139,12 @@ export default function UploadSection({
                 : dndHover
                   ? "rgba(0,200,255,0.6)"
                   : "rgba(0,200,255,0.25)",
-            boxShadow: dndHover || dragOver
-              ? "0 0 15px rgba(0,200,255,0.35)"
-              : file
-                ? "0 0 10px rgba(34,197,94,0.2)"
-                : "none",
+            boxShadow:
+              dndHover || dragOver
+                ? "0 0 15px rgba(0,200,255,0.35)"
+                : file
+                  ? "0 0 10px rgba(34,197,94,0.2)"
+                  : "none",
           }}
           transition={{ duration: 0.3 }}
           style={{
@@ -157,17 +176,31 @@ export default function UploadSection({
                   {fileIcon(file.name)}
                 </span>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ color: "#e6edf3", fontWeight: 700, fontSize: "0.85rem" }}>
+                  <div
+                    style={{
+                      color: "#e6edf3",
+                      fontWeight: 700,
+                      fontSize: "0.85rem",
+                    }}
+                  >
                     {file.name}
                   </div>
-                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem" }}>
+                  <div
+                    style={{
+                      color: "rgba(255,255,255,0.4)",
+                      fontSize: "0.72rem",
+                    }}
+                  >
                     {formatSize(file.size)}
                   </div>
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={(e) => { e.stopPropagation(); onFileChange(null); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFileChange(null);
+                  }}
                   style={{
                     background: "rgba(239,68,68,0.15)",
                     border: "1px solid rgba(239,68,68,0.25)",
@@ -187,15 +220,42 @@ export default function UploadSection({
               </div>
             ) : (
               <>
-                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 auto 10px", display: "block" }}>
+                <svg
+                  width="42"
+                  height="42"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#0ea5e9"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ margin: "0 auto 10px", display: "block" }}
+                >
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="17 8 12 3 7 8" />
                   <line x1="12" y1="3" x2="12" y2="15" />
                 </svg>
-                <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.85rem", fontWeight: 600 }}>
-                  اسحب الملف إلى هنا أو <span style={{ color: "#0ea5e9", textDecoration: "underline" }}>اختر ملفاً</span>
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.6)",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  اسحب الملف إلى هنا أو{" "}
+                  <span
+                    style={{ color: "#0ea5e9", textDecoration: "underline" }}
+                  >
+                    اختر ملفاً
+                  </span>
                 </div>
-                <div style={{ color: "rgba(255,255,255,0.25)", fontSize: "0.7rem", marginTop: "6px" }}>
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.25)",
+                    fontSize: "0.7rem",
+                    marginTop: "6px",
+                  }}
+                >
                   PDF, DOC, ZIP — حد أقصى 20MB
                 </div>
               </>
@@ -234,12 +294,14 @@ export default function UploadSection({
                 style={{
                   height: "100%",
                   borderRadius: 6,
-                  background: uploadProgress >= 100
-                    ? "linear-gradient(90deg, #22C55E, #16A34A)"
-                    : "linear-gradient(90deg, #0ea5e9, #2563eb, #4f46e5)",
-                  boxShadow: uploadProgress >= 100
-                    ? "0 0 15px rgba(34,197,94,0.4)"
-                    : "0 0 15px rgba(37,99,235,0.3)",
+                  background:
+                    uploadProgress >= 100
+                      ? "linear-gradient(90deg, #22C55E, #16A34A)"
+                      : "linear-gradient(90deg, #0ea5e9, #2563eb, #4f46e5)",
+                  boxShadow:
+                    uploadProgress >= 100
+                      ? "0 0 15px rgba(34,197,94,0.4)"
+                      : "0 0 15px rgba(37,99,235,0.3)",
                 }}
               />
             </div>
@@ -249,18 +311,31 @@ export default function UploadSection({
                 justifyContent: "space-between",
                 marginTop: 6,
                 fontSize: "0.72rem",
-                color: uploadProgress >= 100 ? "#22C55E" : "rgba(255,255,255,0.5)",
+                color:
+                  uploadProgress >= 100 ? "#22C55E" : "rgba(255,255,255,0.5)",
               }}
             >
-              <span>{uploadProgress >= 100 ? "✓ تم الرفع بنجاح" : uploading ? "جاري الرفع..." : ""}</span>
-              <span style={{ fontWeight: 700 }}>{Math.round(uploadProgress)}%</span>
+              <span>
+                {uploadProgress >= 100
+                  ? "✓ تم الرفع بنجاح"
+                  : uploading
+                    ? "جاري الرفع..."
+                    : ""}
+              </span>
+              <span style={{ fontWeight: 700 }}>
+                {Math.round(uploadProgress)}%
+              </span>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <motion.button
-        whileHover={!uploading && selectedSubject && file ? { y: -2, boxShadow: "0 0 25px rgba(37,99,235,0.4)" } : {}}
+        whileHover={
+          !uploading && selectedSubject && file
+            ? { y: -2, boxShadow: "0 0 25px rgba(37,99,235,0.4)" }
+            : {}
+        }
         whileTap={!uploading && selectedSubject && file ? { scale: 0.98 } : {}}
         onClick={onUpload}
         disabled={uploading || !selectedSubject || !file}
@@ -277,7 +352,8 @@ export default function UploadSection({
           color: "#fff",
           fontSize: "0.95rem",
           fontWeight: 800,
-          cursor: uploading || !selectedSubject || !file ? "not-allowed" : "pointer",
+          cursor:
+            uploading || !selectedSubject || !file ? "not-allowed" : "pointer",
           opacity: uploading || !selectedSubject || !file ? 0.5 : 1,
           letterSpacing: "0.3px",
           display: "flex",
@@ -286,15 +362,26 @@ export default function UploadSection({
           gap: "8px",
         }}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
           <polyline points="17 8 12 3 7 8" />
           <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
-        {uploading ? "جاري الرفع..." : uploadProgress >= 100 ? "✓ تم الرفع" : "رفع التكليف"}
+        {uploading
+          ? "جاري الرفع..."
+          : uploadProgress >= 100
+            ? "✓ تم الرفع"
+            : "رفع التكليف"}
       </motion.button>
     </motion.div>
   );
 }
-
-

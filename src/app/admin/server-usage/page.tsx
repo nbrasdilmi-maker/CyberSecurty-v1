@@ -134,7 +134,7 @@ export default function ServerUsagePage() {
 
   const handleDownload = (url: string, name: string) => {
     const a = document.createElement("a");
-    a.href = url;
+    a.href = `/api/proxy/download?url=${encodeURIComponent(url)}&name=${encodeURIComponent(name)}`;
     a.download = name;
     document.body.appendChild(a);
     a.click();
@@ -457,7 +457,7 @@ export default function ServerUsagePage() {
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() =>
-                                      handleDownload(f.url, f.name)
+                                      handleDownload(f.url, f.uploadedBy ? `${f.uploadedBy}-${f.name}` : f.name)
                                     }
                                     style={{
                                       padding: "5px 9px",

@@ -76,22 +76,6 @@ const PdfIcon = () => (
   </svg>
 );
 
-const EyeIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
 // ==================== المكوّن الرئيسي ====================
 export default function TeacherAuditLogPage() {
   const router = useRouter();
@@ -145,6 +129,18 @@ export default function TeacherAuditLogPage() {
   useEffect(() => {
     loadAssignments();
   }, [loadAssignments]);
+
+  // ==================== تحميل ملف باسم الطالب ====================
+  const downloadFile = (item: EvaluatedAssignment) => {
+    if (!item.fileUrl) return;
+    const name = `${item.studentName}-${item.fileName || "ملف"}`;
+    const a = document.createElement("a");
+    a.href = `/api/proxy/download?url=${encodeURIComponent(item.fileUrl)}&name=${encodeURIComponent(name)}`;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
   // ==================== تصدير Excel ====================
   const exportExcel = () => {
@@ -567,21 +563,46 @@ export default function TeacherAuditLogPage() {
                               style={{ padding: "12px", textAlign: "center" }}
                             >
                               {a.fileUrl ? (
-                                <motion.a
-                                  whileHover={{ scale: 1.1 }}
-                                  href={a.fileUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                <div
                                   style={{
-                                    color: "#00e5ff",
                                     display: "inline-flex",
                                     alignItems: "center",
                                     gap: "4px",
-                                    fontSize: "0.75rem",
                                   }}
                                 >
-                                  <EyeIcon /> {a.fileName}
-                                </motion.a>
+                                  <span
+                                    onClick={() => window.open(a.fileUrl, '_blank', 'noopener')}
+                                    style={{
+                                      color: "#58a6ff",
+                                      fontSize: "0.7rem",
+                                      cursor: "pointer",
+                                    }}
+                                    onMouseEnter={(e) =>
+                                      (e.currentTarget.style.color = "#39ff14")
+                                    }
+                                    onMouseLeave={(e) =>
+                                      (e.currentTarget.style.color = "#58a6ff")
+                                    }
+                                  >
+                                    👁 فتح
+                                  </span>
+                                  <span
+                                    onClick={() => downloadFile(a)}
+                                    style={{
+                                      color: "#2ea043",
+                                      fontSize: "0.7rem",
+                                      cursor: "pointer",
+                                    }}
+                                    onMouseEnter={(e) =>
+                                      (e.currentTarget.style.color = "#39ff14")
+                                    }
+                                    onMouseLeave={(e) =>
+                                      (e.currentTarget.style.color = "#2ea043")
+                                    }
+                                  >
+                                    📥 تحميل
+                                  </span>
+                                </div>
                               ) : (
                                 "—"
                               )}
@@ -718,20 +739,46 @@ export default function TeacherAuditLogPage() {
                           📅 {formatDate(a.createdAt)}
                         </span>
                         {a.fileUrl && (
-                          <a
-                            href={a.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <div
                             style={{
-                              color: "#00e5ff",
-                              fontSize: "0.7rem",
                               display: "flex",
                               alignItems: "center",
-                              gap: "3px",
+                              gap: "6px",
                             }}
                           >
-                            <EyeIcon /> ملف
-                          </a>
+                            <span
+                              onClick={() => window.open(a.fileUrl, '_blank', 'noopener')}
+                              style={{
+                                color: "#58a6ff",
+                                fontSize: "0.7rem",
+                                cursor: "pointer",
+                              }}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.color = "#39ff14")
+                              }
+                              onMouseLeave={(e) =>
+                                (e.currentTarget.style.color = "#58a6ff")
+                              }
+                            >
+                              👁 فتح
+                            </span>
+                            <span
+                              onClick={() => downloadFile(a)}
+                              style={{
+                                color: "#2ea043",
+                                fontSize: "0.7rem",
+                                cursor: "pointer",
+                              }}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.color = "#39ff14")
+                              }
+                              onMouseLeave={(e) =>
+                                (e.currentTarget.style.color = "#2ea043")
+                              }
+                            >
+                              📥 تحميل
+                            </span>
+                          </div>
                         )}
                       </div>
                       {a.feedback && (

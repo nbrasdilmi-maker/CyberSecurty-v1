@@ -293,23 +293,15 @@ export default function TeacherDashboard() {
   };
 
   // ==================== تحميل ملف ====================
-  const downloadFile = async (item: AssignmentItem) => {
+  const downloadFile = (item: AssignmentItem) => {
     if (!item.fileUrl) return;
-    try {
-      const res = await fetch(item.fileUrl);
-      const blob = await res.blob();
-      const ext = item.fileName?.split(".").pop() || "";
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${item.student.name}-${item.fileName || `file.${ext}`}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch {
-      window.open(item.fileUrl, "_blank");
-    }
+    const name = `${item.student.name}-${item.fileName || "ملف"}`;
+    const a = document.createElement("a");
+    a.href = `/api/proxy/download?url=${encodeURIComponent(item.fileUrl)}&name=${encodeURIComponent(name)}`;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   // ==================== تحميل جميع الملفات ====================

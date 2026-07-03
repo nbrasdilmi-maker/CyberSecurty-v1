@@ -102,10 +102,13 @@ export default function SharedFilesPage() {
   };
 
   const handleDownload = (file: SharedFile) => {
+    const name = `${file.authorName}-${file.fileName}`;
     const a = document.createElement("a");
-    a.href = file.fileUrl;
-    a.download = file.fileName;
+    a.href = `/api/proxy/download?url=${encodeURIComponent(file.fileUrl)}&name=${encodeURIComponent(name)}`;
+    a.download = name;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     showToast("📥 تم التنزيل", "success");
   };
 
