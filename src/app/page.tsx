@@ -381,25 +381,30 @@ export default function HomePage() {
             سحابة الأمن السيبراني © {new Date().getFullYear()} — جامعة ذمار · كلية الحاسبات
           </div>
           <div
-            className="footer-text-2"
             style={{
-              fontSize: "clamp(0.55rem, 1vw, 0.68rem)",
-              color: "rgba(255,255,255,0.18)",
-              fontWeight: 400,
               marginTop: 6,
-              letterSpacing: "0.2px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              flexWrap: "wrap",
             }}
           >
-            فريق التطوير:{" "}
-            <span className="name-glow">محمد إبراهيم الديلمي</span>
-            <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 4px" }}>|</span>
-            <span className="name-glow">أحمد الهيدمة</span>
-            <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 4px" }}>|</span>
-            <span className="name-glow">عبدالجليل الجبلي</span>
-            <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 4px" }}>|</span>
-            <span className="name-glow">أسامة شرهان</span>
-            <span style={{ color: "rgba(255,255,255,0.12)", margin: "0 4px" }}>|</span>
-            <span className="name-glow">قناف العجيبي</span>
+            <span
+              style={{
+                background: "linear-gradient(90deg, #00e5ff, #7c3aed)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                fontWeight: 700,
+                fontSize: "clamp(0.6rem, 1vw, 0.75rem)",
+              }}
+            >
+              فريق "طليعة الأمن السيبراني" | Cyber Vanguard
+            </span>
+            <span style={{ color: "rgba(255,255,255,0.12)" }}>·</span>
+            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "clamp(0.5rem, 0.9vw, 0.65rem)", fontWeight: 500 }}>
+              محمد إبراهيم الديلمي · أحمد الهيدمة · عبدالجليل الجبلي · أسامة شرهان · قناف العجيبي
+            </span>
           </div>
         </footer>
       </div>

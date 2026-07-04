@@ -7,7 +7,7 @@ export default function Footer() {
         left: 0,
         right: 0,
         zIndex: 50,
-        padding: "8px 20px",
+        padding: "6px 20px",
         textAlign: "center",
         background: "rgba(2, 4, 8, 0.35)",
         backdropFilter: "blur(40px)",
@@ -18,33 +18,42 @@ export default function Footer() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: "12px",
+        gap: "8px",
         flexWrap: "wrap",
       }}
     >
-      <span style={{ fontSize: "clamp(0.6rem, 1vw, 0.72rem)", color: "#8b949e" }}>
-        تطوير وإشراف:
-      </span>
       <span
         style={{
-          color: "#00e5ff",
-          fontWeight: 600,
-          fontSize: "clamp(0.62rem, 1vw, 0.75rem)",
-          textShadow: "0 0 8px rgba(0,229,255,0.2)",
+          background: "linear-gradient(90deg, #00e5ff, #7c3aed)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          fontWeight: 700,
+          fontSize: "clamp(0.55rem, 1vw, 0.7rem)",
+          letterSpacing: "0.3px",
         }}
       >
-        محمد إبراهيم الديلمي | أحمد الهيدمة | عبدالجليل الجبلي | أسامة شرهان | قناف العجيبي
+        فريق "طليعة الأمن السيبراني" | Cyber Vanguard
       </span>
-      <span style={{ color: "#30363d", fontSize: "0.6rem" }}>|</span>
+      <span style={{ color: "#30363d", fontSize: "0.55rem" }}>|</span>
+      <span
+        style={{
+          color: "#8b949e",
+          fontSize: "clamp(0.5rem, 0.8vw, 0.65rem)",
+          fontWeight: 500,
+        }}
+      >
+        محمد إبراهيم الديلمي · أحمد الهيدمة · عبدالجليل الجبلي · أسامة شرهان · قناف العجيبي
+      </span>
+      <span style={{ color: "#30363d", fontSize: "0.55rem" }}>|</span>
       <span
         style={{
           fontFamily: "'Orbitron', sans-serif",
-          fontSize: "clamp(0.5rem, 0.8vw, 0.6rem)",
+          fontSize: "clamp(0.45rem, 0.7vw, 0.55rem)",
           color: "#5a6a7a",
           letterSpacing: "0.5px",
         }}
       >
-        CYBER SECURITY CLOUD — DHAMAR UNIVERSITY &copy; 2026
+        DHAMAR UNIVERSITY &copy; 2026
       </span>
     </footer>
   );

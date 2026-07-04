@@ -909,23 +909,64 @@ export function TeamSection() {
       <div
         style={{
           padding: "80px 20px",
-          maxWidth: "900px",
+          maxWidth: "1000px",
           margin: "0 auto",
           textAlign: "center",
         }}
       >
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            background: "rgba(0, 229, 255, 0.08)",
+            border: "1px solid rgba(0, 229, 255, 0.25)",
+            borderRadius: "100px",
+            padding: "8px 24px",
+            marginBottom: 20,
+            boxShadow: "0 0 30px rgba(0, 229, 255, 0.15), 0 0 60px rgba(124, 58, 237, 0.08), inset 0 0 20px rgba(0, 229, 255, 0.05)",
+          }}
+        >
+          <span style={{ fontSize: "1.1rem", filter: "drop-shadow(0 0 8px rgba(0,229,255,0.5))" }}>⚡</span>
+          <span
+            style={{
+              background: "linear-gradient(90deg, #00e5ff, #a78bfa, #7c3aed)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              fontWeight: 800,
+              fontSize: "clamp(0.7rem, 1.3vw, 0.9rem)",
+              letterSpacing: "0.3px",
+              textShadow: "0 0 40px rgba(0, 229, 255, 0.3)",
+            }}
+          >
+            تطوير فريق طليعة الأمن السيبراني
+          </span>
+          <span
+            style={{
+              color: "#8b9dc3",
+              fontSize: "clamp(0.5rem, 0.8vw, 0.65rem)",
+              fontFamily: "'Orbitron', sans-serif",
+              letterSpacing: "1.5px",
+              textShadow: "0 0 20px rgba(0, 229, 255, 0.4), 0 0 40px rgba(124, 58, 237, 0.2)",
+              fontWeight: 600,
+            }}
+          >
+            CYBER VANGUARD
+          </span>
+        </div>
+
         <h2
           style={{
-            fontSize: "clamp(1.5rem, 4vw, 2rem)",
+            fontSize: "clamp(1.3rem, 3vw, 1.8rem)",
             color: "#fff",
             fontWeight: 800,
-            marginBottom: 8,
+            marginBottom: 6,
           }}
         >
           فريق التطوير
         </h2>
         <p
-          style={{ color: COLORS.muted, fontSize: "0.9rem", marginBottom: 40 }}
+          style={{ color: COLORS.muted, fontSize: "0.85rem", marginBottom: 48, marginTop: 0 }}
         >
           طلاب الأمن السيبراني — جامعة ذمار
         </p>
@@ -933,39 +974,62 @@ export function TeamSection() {
         <div
           style={{
             display: "flex",
-            gap: 24,
+            gap: 20,
             justifyContent: "center",
             flexWrap: "wrap",
           }}
         >
-          {TEAM.map((member) => (
+          {TEAM.map((member, idx) => (
             <div
               key={member.name}
               style={{
                 background: COLORS.glass,
-                border: `1px solid ${member.color}33`,
-                borderRadius: "20px",
-                padding: "32px 24px",
-                maxWidth: 320,
+                border: `1px solid ${member.color}22`,
+                borderRadius: "16px",
+                padding: "28px 20px 24px",
+                maxWidth: 280,
                 width: "100%",
                 backdropFilter: "blur(10px)",
                 textAlign: "center",
+                position: "relative",
+                overflow: "hidden",
+                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.boxShadow = `0 8px 32px ${member.color}22`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
               }}
             >
               <div
                 style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: "50%",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: "3px",
+                  background: `linear-gradient(90deg, ${member.color}, transparent)`,
+                }}
+              />
+              <div
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: "16px",
                   background: `linear-gradient(135deg, ${member.color}, #007bff)`,
-                  margin: "0 auto 16px",
+                  margin: "0 auto 14px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "1.8rem",
-                  fontWeight: 700,
+                  fontSize: "1.6rem",
+                  fontWeight: 800,
                   color: "#fff",
                   fontFamily: "'Cairo', sans-serif",
+                  position: "relative",
+                  boxShadow: `0 4px 20px ${member.color}33`,
                 }}
               >
                 {member.name.charAt(0)}
@@ -973,7 +1037,7 @@ export function TeamSection() {
               <h3
                 style={{
                   color: "#fff",
-                  fontSize: "1.1rem",
+                  fontSize: "1rem",
                   fontWeight: 700,
                   margin: "0 0 4px",
                 }}
@@ -984,8 +1048,8 @@ export function TeamSection() {
               <p
                 style={{
                   color: COLORS.muted,
-                  fontSize: "0.82rem",
-                  lineHeight: 1.6,
+                  fontSize: "0.78rem",
+                  lineHeight: 1.5,
                   margin: 0,
                 }}
               >

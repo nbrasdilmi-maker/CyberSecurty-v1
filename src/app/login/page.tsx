@@ -2159,7 +2159,7 @@ export default function LoginPage() {
                 e.currentTarget.style.color = "rgba(255,255,255,0.3)";
               }}
             >
-              {showTeam ? "▲" : "▼"} فريق المطورين
+              {showTeam ? "▲" : "▼"} فريق "طليعة الأمن السيبراني" | Cyber Vanguard
             </span>
 
             <AnimatePresence>
@@ -2172,14 +2172,14 @@ export default function LoginPage() {
                   style={{ overflow: "hidden", display: "flex", flexDirection: "column", gap: 4 }}
                 >
                   {[
-                    "محمد إبراهيم الديلمي",
-                    "أحمد الهيدمة",
-                    "عبدالجليل الجبلي",
-                    "أسامة شرهان",
-                    "قناف العجيبي",
-                  ].map((name, i) => (
+                    { name: "محمد إبراهيم الديلمي", color: "#00e5ff" },
+                    { name: "أحمد الهيدمة", color: "#7c3aed" },
+                    { name: "عبدالجليل الجبلي", color: "#10b981" },
+                    { name: "أسامة شرهان", color: "#f59e0b" },
+                    { name: "قناف العجيبي", color: "#ef4444" },
+                  ].map((member, i) => (
                     <motion.div
-                      key={name}
+                      key={member.name}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.08, duration: 0.3 }}
@@ -2190,18 +2190,31 @@ export default function LoginPage() {
                           fontWeight: 500,
                           cursor: "default",
                           transition: "color 0.4s, text-shadow 0.4s",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.color = "#00e5ff";
+                          e.currentTarget.style.color = member.color;
                           e.currentTarget.style.textShadow =
-                            "0 0 24px rgba(0,229,255,0.6), 0 0 48px rgba(0,229,255,0.2)";
+                            `0 0 24px ${member.color}66, 0 0 48px ${member.color}22`;
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.color = "rgba(255,255,255,0.35)";
                           e.currentTarget.style.textShadow = "none";
                         }}
                       >
-                        {name}
+                        <span
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: member.color,
+                            display: "inline-block",
+                            opacity: 0.4,
+                          }}
+                        />
+                        {member.name}
                       </span>
                     </motion.div>
                   ))}
