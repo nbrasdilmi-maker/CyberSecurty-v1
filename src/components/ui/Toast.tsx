@@ -13,15 +13,17 @@ type ToastType = "success" | "error" | "warning" | "info";
 
 interface ToastItem {
   id: string;
+  key?: string;
   message: string;
   type: ToastType;
 }
 
 interface ToastContextType {
-  showToast: (message: string, type?: ToastType) => void;
+  showToast: (message: string, type?: ToastType, key?: string) => void;
+  dismissToast: (key: string) => void;
 }
 
-const ToastContext = createContext<ToastContextType>({ showToast: () => {} });
+const ToastContext = createContext<ToastContextType>({ showToast: () => {}, dismissToast: () => {} });
 
 export function useToast() {
   return useContext(ToastContext);
@@ -30,12 +32,19 @@ export function useToast() {
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
-  const showToast = useCallback((message: string, type: ToastType = "info") => {
+  const showToast = useCallback((message: string, type: ToastType = "info", key?: string) => {
     const id = Date.now().toString();
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => {
+      const filtered = key ? prev.filter((t) => t.key !== key) : prev;
+      return [...filtered, { id, key, message, type }];
+    });
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4000);
+  }, []);
+
+  const dismissToast = useCallback((key: string) => {
+    setToasts((prev) => prev.filter((t) => t.key !== key));
   }, []);
 
   const getColors = (type: ToastType) => {
@@ -52,7 +61,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast, dismissToast }}>
       {children}
       <div
         style={{

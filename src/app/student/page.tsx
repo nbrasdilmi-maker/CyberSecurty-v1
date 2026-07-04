@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/Toast";
@@ -8,6 +8,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { useAuthStore } from "@/store/authStore";
 import { csrfFetch } from "@/lib/csrfClient";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
+import { deriveStaticChannelName } from "@/lib/realtimeChannels";
 
 import StatsCards from "@/components/student-mock/StatsCards";
 import WelcomeHero from "@/components/student-mock/WelcomeHero";
@@ -22,6 +23,7 @@ interface Subject {
   id: string;
   name: string;
   code: string;
+  submissionsOpen?: boolean;
 }
 
 type MobileTab = "upload" | "assignments" | "grades" | null;
@@ -35,7 +37,7 @@ const tabMeta: { key: MobileTab; label: string; icon: string; color: string }[] 
 export default function StudentDashboardV2() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const { showToast } = useToast();
+  const { showToast, dismissToast } = useToast();
 
   const userId = user?.id || "";
   const userName = user?.name || "";
@@ -48,6 +50,20 @@ export default function StudentDashboardV2() {
       showToast(`✅ تم تقييم ${data.subjectName}: ${data.grade}`, "success");
     }
   });
+
+  useSupabaseRealtime(
+    deriveStaticChannelName(`level-${userLevel}`),
+    "subject-toggle",
+    (data: any) => {
+      if (data.subjectId && data.submissionsOpen !== undefined) {
+        setSubjects((prev) =>
+          prev.map((s) =>
+            s.id === data.subjectId ? { ...s, submissionsOpen: data.submissionsOpen } : s,
+          ),
+        );
+      }
+    },
+  );
 
   // Data
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -74,17 +90,24 @@ export default function StudentDashboardV2() {
   const [activeTab, setActiveTab] = useState<MobileTab>(null);
 
   // === Load subjects ===
-  useEffect(() => {
-    fetch(`/api/subjects/active?level=${userLevel}`)
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.success) {
-          setSubjects(res.data);
-          setStats((prev) => ({ ...prev, subjects: res.data.length }));
-        }
-      })
-      .catch(() => {});
+  const loadSubjects = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/subjects/active?level=${userLevel}`);
+      const data = await res.json();
+      if (data.success) {
+        setSubjects(data.data);
+        setStats((prev) => ({ ...prev, subjects: data.data.length }));
+      }
+    } catch {}
   }, [userLevel]);
+
+  useEffect(() => { loadSubjects(); }, [loadSubjects]);
+
+  // Poll every 5s for real-time subject toggle updates
+  useEffect(() => {
+    const interval = setInterval(loadSubjects, 5000);
+    return () => clearInterval(interval);
+  }, [loadSubjects]);
 
   // === Load assignments ===
   const loadAssignments = useCallback(async () => {
@@ -189,6 +212,16 @@ export default function StudentDashboardV2() {
     }
   };
 
+  // === Subject selection (check if submissions open) ===
+  const handleSubjectSelect = (subject: Subject) => {
+    if (subject.submissionsOpen === false) {
+      showToast("⛔ لايمكنك رفع التكليف للمعلم بسبب تاخرك في تسليم التكليف", "error", "subject-closed");
+      return;
+    }
+    dismissToast("subject-closed");
+    setSelectedSubject(subject);
+  };
+
   // === View file ===
   const handleViewFile = (url: string) => window.open(url, "_blank");
 
@@ -230,7 +263,7 @@ export default function StudentDashboardV2() {
         <UploadSection
           subjects={subjects}
           selectedSubject={selectedSubject}
-          onSubjectSelect={setSelectedSubject}
+          onSubjectSelect={handleSubjectSelect}
           file={selectedFile}
           uploading={uploading}
           uploadProgress={uploadProgress}
@@ -288,7 +321,7 @@ export default function StudentDashboardV2() {
               <UploadSection
                 subjects={subjects}
                 selectedSubject={selectedSubject}
-                onSubjectSelect={setSelectedSubject}
+                onSubjectSelect={handleSubjectSelect}
                 file={selectedFile}
                 uploading={uploading}
                 uploadProgress={uploadProgress}

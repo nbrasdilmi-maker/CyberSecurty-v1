@@ -85,6 +85,13 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       );
     }
 
+    if (!subject.submissionsOpen) {
+      return NextResponse.json(
+        { success: false, message: "استقبال التكاليف مغلق لهذه المادة" },
+        { status: 403 },
+      );
+    }
+
     const existing = await prisma.assignment.findFirst({
       where: {
         studentId: userId,

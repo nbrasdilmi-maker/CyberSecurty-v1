@@ -16,7 +16,8 @@ export class AdminService {
     },
   ) {
     const effective = await getEffectiveRole(userId);
-    if (effective.role !== "ADMIN" && effective.role !== "MANAGEMENT") {
+    const isTeacher = effective.role === "TEACHER";
+    if (effective.role !== "ADMIN" && effective.role !== "MANAGEMENT" && !isTeacher) {
       throw new ForbiddenError("غير مصرح");
     }
 
@@ -26,7 +27,9 @@ export class AdminService {
 
     const where: any = { deletedAt: null };
 
-    if (effective.role === "MANAGEMENT" && userLevel) {
+    if (isTeacher) {
+      where.level = userLevel;
+    } else if (effective.role === "MANAGEMENT" && userLevel) {
       where.level = userLevel;
     } else if (filters?.level) {
       where.level = filters.level;
@@ -43,10 +46,9 @@ export class AdminService {
       where.email = { contains: filters.email.trim(), mode: "insensitive" };
     }
 
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        select: {
+    const selectFields = isTeacher
+      ? { id: true, name: true }
+      : {
           id: true,
           name: true,
           email: true,
@@ -63,7 +65,12 @@ export class AdminService {
             orderBy: { grantedAt: "desc" },
             take: 1,
           },
-        },
+        };
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: selectFields as any,
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,

@@ -234,15 +234,28 @@ export default function VerticalWheelPicker({ items, onSelect, selected }: Props
                 >
                   {item.name}
                 </span>
-                <span
-                  style={{
-                    color: offset === 0 ? "rgba(0,180,255,0.8)" : "rgba(255,255,255,0.35)",
-                    fontSize: "0.7rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {item.code}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span
+                    style={{
+                      color: offset === 0 ? "rgba(0,180,255,0.8)" : "rgba(255,255,255,0.35)",
+                      fontSize: "0.7rem",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {item.code}
+                  </span>
+                  {item.submissionsOpen === false && (
+                    <span
+                      style={{
+                        fontSize: "0.55rem",
+                        color: "#ef4444",
+                        fontWeight: 700,
+                      }}
+                    >
+                      🔴
+                    </span>
+                  )}
+                </div>
               </div>
               {offset === 0 && (
                 <div

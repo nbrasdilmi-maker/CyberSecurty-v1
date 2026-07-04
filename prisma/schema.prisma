@@ -124,6 +124,7 @@ model Subject {
   semester           Semester            @default(TERM_1)
   isActive           Boolean             @default(true)
   isVisible          Boolean             @default(true)
+  submissionsOpen    Boolean             @default(true)
   teacherId          String?
   createdAt          DateTime            @default(now())
   deletedAt          DateTime?

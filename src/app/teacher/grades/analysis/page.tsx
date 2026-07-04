@@ -76,6 +76,14 @@ export default function AnalysisListPage() {
 
   const [records, setRecords] = useState<AnalysisRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const loadRecords = useCallback(async () => {
     setLoading(true);
@@ -162,7 +170,7 @@ export default function AnalysisListPage() {
           style={{
             maxWidth: "1100px",
             margin: "0 auto",
-            padding: "24px 20px 60px",
+            padding: isMobile ? "16px 10px 60px" : "24px 20px 60px",
           }}
         >
           <motion.div
@@ -241,11 +249,11 @@ export default function AnalysisListPage() {
           ) : records.length === 0 ? (
             <div
               style={{
-                ...glassStyle,
-                padding: "50px",
-                textAlign: "center",
-                color: "#8b949e",
-              }}
+                 ...glassStyle,
+                     padding: "50px",
+                     textAlign: "center",
+                     color: "#8b949e",
+               }}
             >
               <div style={{ fontSize: "3rem", marginBottom: "10px" }}>📭</div>
               <p>لا توجد عمليات تحليل</p>

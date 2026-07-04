@@ -111,6 +111,16 @@ export default function TeacherGradesPage() {
   >([]);
   const [manualPublishType, setManualPublishType] = useState("");
   const [manualPublishing, setManualPublishing] = useState(false);
+  const [manualSearching, setManualSearching] = useState(false);
+  const [manualSearched, setManualSearched] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     if (!userId || !userLevel) return;
@@ -195,6 +205,9 @@ export default function TeacherGradesPage() {
   // النشر اليدوي
   const searchManualStudent = async () => {
     if (!manualSearch.trim()) return;
+    setManualSearching(true);
+    setManualResults([]);
+    setManualSearched(false);
     try {
       const params = new URLSearchParams();
       params.set("search", manualSearch.trim());
@@ -202,8 +215,15 @@ export default function TeacherGradesPage() {
       params.set("role", "STUDENT");
       const res = await fetch(`/api/admin/users?${params}`);
       const data = await res.json();
-      if (data.success) setManualResults(data.data || []);
-    } catch {}
+      if (data.success) {
+        setManualResults(data.data || []);
+        setManualSearched(true);
+      } else showToast(data.message || "فشل البحث", "error");
+    } catch {
+      showToast("تعذر البحث عن الطلاب", "error");
+    } finally {
+      setManualSearching(false);
+    }
   };
   const addManualStudent = (student: { id: string; name: string }) => {
     if (manualList.find((s) => s.id === student.id)) {
@@ -297,7 +317,7 @@ export default function TeacherGradesPage() {
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
-            padding: "24px 20px 60px",
+            padding: isMobile ? "16px 10px 60px" : "24px 20px 60px",
           }}
         >
           <motion.div
@@ -366,7 +386,7 @@ export default function TeacherGradesPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setManualModal(true)}
+                onClick={() => { setManualModal(true); setManualSearched(false); }}
                 style={{
                   padding: "12px 20px",
                   borderRadius: "14px",
@@ -458,17 +478,17 @@ export default function TeacherGradesPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              style={{
-                ...glassStyle,
-                padding: "14px 20px",
-                marginBottom: "20px",
-                textAlign: "center",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "10px",
-                flexWrap: "wrap",
-              }}
+                  style={{
+                    ...glassStyle,
+                    padding: "16px 20px",
+                    marginBottom: "20px",
+                    textAlign: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "10px",
+                    flexWrap: "wrap",
+                  }}
             >
               <span style={{ color: "#8b949e", fontSize: "0.85rem" }}>
                 المادة:
@@ -728,7 +748,7 @@ export default function TeacherGradesPage() {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => setManualModal(false)}
+                  onClick={() => { setManualModal(false); setManualSearched(false); }}
                   style={{
                     background: "none",
                     border: "none",
@@ -754,6 +774,7 @@ export default function TeacherGradesPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={searchManualStudent}
+                  disabled={manualSearching}
                   style={{
                     padding: "10px 16px",
                     borderRadius: "10px",
@@ -761,14 +782,20 @@ export default function TeacherGradesPage() {
                     border: "none",
                     color: "#fff",
                     fontWeight: 700,
-                    cursor: "pointer",
+                    cursor: manualSearching ? "not-allowed" : "pointer",
                     fontFamily: "'Cairo', sans-serif",
+                    opacity: manualSearching ? 0.6 : 1,
                   }}
                 >
-                  بحث
+                  {manualSearching ? "⏳..." : "بحث"}
                 </motion.button>
               </div>
-              {manualResults.length > 0 && (
+              {manualSearching && (
+                <div style={{ textAlign: "center", padding: "10px", color: "#8b949e", fontSize: "0.8rem" }}>
+                  جاري البحث...
+                </div>
+              )}
+              {!manualSearching && manualResults.length > 0 && (
                 <div
                   style={{
                     display: "flex",
@@ -800,6 +827,11 @@ export default function TeacherGradesPage() {
                       {st.name}
                     </motion.button>
                   ))}
+                </div>
+              )}
+              {manualSearched && manualResults.length === 0 && (
+                <div style={{ textAlign: "center", padding: "10px", color: "#8b949e", fontSize: "0.8rem" }}>
+                  لا توجد نتائج لـ "{manualSearch}"
                 </div>
               )}
               {manualList.length > 0 && (

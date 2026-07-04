@@ -75,6 +75,14 @@ export default function AnalysisDetailPage() {
   const [publishing, setPublishing] = useState(false);
   const [distInfo, setDistInfo] = useState<any>(null);
   const [publishType, setPublishType] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // نافذة البحث
   const [searchModal, setSearchModal] = useState<{
@@ -212,7 +220,7 @@ export default function AnalysisDetailPage() {
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
-            padding: "24px 15px 60px",
+            padding: isMobile ? "16px 10px 60px" : "24px 15px 60px",
           }}
         >
           <motion.div
@@ -299,17 +307,16 @@ export default function AnalysisDetailPage() {
               <div
                 style={{
                   ...glassStyle,
-                  overflow: "hidden",
+                  overflowX: "auto",
                   marginBottom: "20px",
                 }}
               >
-                <div style={{ overflowX: "auto" }}>
+                <div style={{ minWidth: "600px" }}>
                   <table
                     style={{
                       width: "100%",
                       borderCollapse: "collapse",
                       fontSize: "0.78rem",
-                      minWidth: "600px",
                     }}
                   >
                     <thead>
@@ -463,34 +470,34 @@ export default function AnalysisDetailPage() {
               {/* رسالة النشر */}
               <div
                 style={{
-                  ...glassStyle,
-                  padding: "16px 20px",
-                  marginBottom: "20px",
+                ...glassStyle,
+                padding: "16px 20px",
+                marginBottom: "20px",
+              }}
+            >
+              <p
+                style={{
+                  color: "#8b949e",
+                  fontSize: "0.8rem",
+                  marginBottom: "10px",
+                  textAlign: "center",
                 }}
               >
-                <p
-                  style={{
-                    color: "#8b949e",
-                    fontSize: "0.8rem",
-                    marginBottom: "10px",
-                    textAlign: "center",
-                  }}
-                >
-                  📢 رسالة النشر:{" "}
-                  <span style={{ color: "#00e5ff" }}>
-                    قام معلم {distInfo?.subjectName || "المادة"} برفع درجاتك في:
-                  </span>
-                </p>
-                <input
-                  type="text"
-                  placeholder="مثال: الاختبار الشهري - المحصلة الشهرية"
-                  value={publishType}
-                  onChange={(e) => setPublishType(e.target.value)}
-                  style={{
-                    ...inputStyle,
-                    textAlign: "center",
-                    fontSize: "0.9rem",
-                    padding: "10px",
+                📢 رسالة النشر:{" "}
+                <span style={{ color: "#00e5ff" }}>
+                  قام معلم {distInfo?.subjectName || "المادة"} برفع درجاتك في:
+                </span>
+              </p>
+              <input
+                type="text"
+                placeholder="مثال: الاختبار الشهري - المحصلة الشهرية"
+                value={publishType}
+                onChange={(e) => setPublishType(e.target.value)}
+                style={{
+                  ...inputStyle,
+                  textAlign: "center",
+                  fontSize: "0.9rem",
+                  padding: "10px",
                   }}
                 />
               </div>

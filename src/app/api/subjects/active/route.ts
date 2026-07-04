@@ -72,6 +72,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
       level: s.level,
       semester: s.semester,
       teacherName: s.teacher?.name || null,
+      submissionsOpen: s.submissionsOpen,
     }));
 
     return addCacheHeaders(NextResponse.json({ success: true, data }), 300);

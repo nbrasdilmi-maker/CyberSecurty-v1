@@ -2,6 +2,7 @@ export interface Subject {
   id: string;
   name: string;
   code: string;
+  submissionsOpen?: boolean;
 }
 
 export interface AssignmentItem {

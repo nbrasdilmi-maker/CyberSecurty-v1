@@ -10,7 +10,7 @@ import { useAuthStore } from "@/store/authStore";
 import { csrfFetch } from "@/lib/csrfClient";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import WelcomeCard from "@/components/teacher/WelcomeCard";
-import QuickShortcuts from "@/components/teacher/QuickShortcuts";
+
 import StatsCards from "@/components/teacher/StatsCards";
 import TabsBar from "@/components/teacher/TabsBar";
 import EvaluationModal from "@/components/teacher/EvaluationModal";
@@ -20,6 +20,7 @@ interface Subject {
   id: string;
   name: string;
   code: string;
+  submissionsOpen: boolean;
 }
 
 interface AssignmentItem {
@@ -158,6 +159,9 @@ export default function TeacherDashboard() {
   // الإحصائيات
   const [stats, setStats] = useState({ pending: 0, evaluated: 0, students: 0 });
 
+  // التحكم باستقبال التكاليف
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
   // الترقيم
   const pendingPag = usePagination(1, 20);
   const historyPag = usePagination(1, 20);
@@ -176,14 +180,21 @@ export default function TeacherDashboard() {
   const gradeFileRef = useRef<HTMLInputElement>(null);
 
   // ==================== تحميل المواد ====================
+  const loadSubjects = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/subjects/active?level=${userLevel}&teacherId=${userId}`);
+      const data = await res.json();
+      if (data.success) setSubjects(data.data);
+    } catch {}
+  }, [userLevel, userId]);
+
+  useEffect(() => { loadSubjects(); }, [loadSubjects]);
+
+  // Poll every 5s for real-time subject toggle updates
   useEffect(() => {
-    fetch(`/api/subjects/active?level=${userLevel}`)
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.success) setSubjects(res.data);
-      })
-      .catch(() => {});
-  }, [userLevel]);
+    const interval = setInterval(loadSubjects, 5000);
+    return () => clearInterval(interval);
+  }, [loadSubjects]);
 
   // ==================== تحميل التكاليف المعلقة ====================
   const loadPending = useCallback(async () => {
@@ -353,6 +364,32 @@ export default function TeacherDashboard() {
     router.push("/login");
   };
 
+  // ==================== تبديل حالة استقبال التكاليف ====================
+  const handleToggle = async (subjectId: string) => {
+    setTogglingId(subjectId);
+    try {
+      const res = await csrfFetch("/api/assignments/toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subjectId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSubjects(prev =>
+          prev.map(s =>
+            s.id === subjectId ? { ...s, submissionsOpen: data.submissionsOpen } : s,
+          ),
+        );
+        showToast(data.message, data.submissionsOpen ? "success" : "warning");
+      } else {
+        showToast(data.message || "فشل التبديل", "error");
+      }
+    } catch {
+      showToast("حدث خطأ في الاتصال", "error");
+    }
+    setTogglingId(null);
+  };
+
   // ==================== أدوات مساعدة ====================
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("ar-YE", {
@@ -392,17 +429,7 @@ export default function TeacherDashboard() {
         >
           <WelcomeCard userName={userName} userLevel={userLevel} onLogout={handleLogout} lastLoginAt={user?.lastLoginAt} createdAt={user?.createdAt} />
 
-          <QuickShortcuts
-            shortcuts={[
-              { label: "الإشعارات", path: "/notifications", color: "#ffca28" },
-              { label: "المكتبة", path: "/library", color: "#00e5ff" },
-              { label: "المحادثة", path: "/chat", color: "#39ff14" },
-              { label: "تعميم", path: "/announcements/create", color: "#ff3131" },
-              { label: "العمليات", path: "/teacher/audit-log", color: "#bf5af2" },
-              { label: "الإعدادات", path: "/settings", color: "#8b949e" },
-            ]}
-            onNavigate={(path) => router.push(path)}
-          />
+
 
           <StatsCards
             pending={stats.pending}
@@ -411,6 +438,78 @@ export default function TeacherDashboard() {
             subjects={subjects.length}
             loading={loading}
           />
+
+          {subjects.length > 0 && (
+            <div
+              style={{
+                ...glassStyle,
+                padding: "20px",
+                marginBottom: "20px",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "0.9rem",
+                  fontWeight: 700,
+                  color: "#00e5ff",
+                  margin: "0 0 14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                🔒 التحكم باستقبال التكاليف
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {subjects.map((sub) => (
+                  <div
+                    key={sub.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      borderRadius: "12px",
+                      background: sub.submissionsOpen
+                        ? "rgba(34,197,94,0.06)"
+                        : "rgba(239,68,68,0.06)",
+                      border: `1px solid ${sub.submissionsOpen ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)"}`,
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#e6edf3" }}>
+                      {sub.name}
+                    </span>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleToggle(sub.id)}
+                      disabled={togglingId === sub.id}
+                      style={{
+                        padding: "6px 16px",
+                        borderRadius: "8px",
+                        border: "none",
+                        cursor: togglingId === sub.id ? "not-allowed" : "pointer",
+                        opacity: togglingId === sub.id ? 0.5 : 1,
+                        fontWeight: 700,
+                        fontSize: "0.78rem",
+                        fontFamily: "'Cairo', sans-serif",
+                        color: "#fff",
+                        background: sub.submissionsOpen
+                          ? "linear-gradient(90deg, #ef4444, #dc2626)"
+                          : "linear-gradient(90deg, #22c55e, #16a34a)",
+                      }}
+                    >
+                      {togglingId === sub.id
+                        ? "..."
+                        : sub.submissionsOpen
+                          ? "🔴 إيقاف الاستقبال"
+                          : "🟢 فتح الاستقبال"}
+                    </motion.button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <TabsBar
             tabs={[
