@@ -1002,13 +1002,31 @@ export default function LoginPage() {
                       }}
                     >
                       {showPassword ? (
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b949e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#8b949e"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
                           <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
                           <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
                           <line x1="1" y1="1" x2="23" y2="23" />
                         </svg>
                       ) : (
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b949e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#8b949e"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
@@ -1357,7 +1375,7 @@ export default function LoginPage() {
                               margin: "0 0 4px",
                             }}
                           >
-                            مرحباً بال{roleLabel}
+                            مرحباً ب{roleLabel}
                             {levelLabel ? ` - ${levelLabel}` : ""}
                           </p>
                           <p
@@ -2171,7 +2189,8 @@ export default function LoginPage() {
                 e.currentTarget.style.color = "rgba(255,255,255,0.3)";
               }}
             >
-              {showTeam ? "▲" : "▼"} فريق "طليعة الأمن السيبراني" | Cyber Vanguard
+              {showTeam ? "▲" : "▼"} فريق "طليعة الأمن السيبراني" | Cyber
+              Vanguard
             </span>
 
             <AnimatePresence>
@@ -2181,7 +2200,12 @@ export default function LoginPage() {
                   animate={{ height: "auto", opacity: 1, marginTop: 8 }}
                   exit={{ height: 0, opacity: 0, marginTop: 0 }}
                   transition={{ duration: 0.35, ease: "easeInOut" }}
-                  style={{ overflow: "hidden", display: "flex", flexDirection: "column", gap: 4 }}
+                  style={{
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                  }}
                 >
                   {[
                     { name: "محمد إبراهيم الديلمي", color: "#00e5ff" },
@@ -2208,11 +2232,11 @@ export default function LoginPage() {
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.color = member.color;
-                          e.currentTarget.style.textShadow =
-                            `0 0 24px ${member.color}66, 0 0 48px ${member.color}22`;
+                          e.currentTarget.style.textShadow = `0 0 24px ${member.color}66, 0 0 48px ${member.color}22`;
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.color = "rgba(255,255,255,0.35)";
+                          e.currentTarget.style.color =
+                            "rgba(255,255,255,0.35)";
                           e.currentTarget.style.textShadow = "none";
                         }}
                       >
