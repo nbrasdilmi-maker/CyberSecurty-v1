@@ -9,7 +9,7 @@ import UserActivityTracker from "@/components/layout/UserActivityTracker";
 import EffectsManager from "@/components/effects/EffectsManager";
 import DashboardBackground from "@/components/effects/DashboardBackground";
 import NavigationProgress from "@/components/ui/NavigationProgress";
-import MatrixRain from "@/components/effects/MatrixRain";
+import MatrixRain from "@/components/effects/AdaptiveMatrixRain";
 import PageGuardProvider from "@/components/ui/PageGuardProvider";
 export const metadata: Metadata = {
   title: "سحابة الأمن السيبراني - جامعة ذمار",
@@ -53,7 +53,6 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800&family=Orbitron:wght@400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         />
-        <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
       </head>
       <body className="min-h-screen bg-[#010204] text-[#e6edf3] antialiased font-[Cairo]">
         <NavigationProgress />
@@ -75,7 +74,6 @@ export default function RootLayout({
             </AnimationsProvider>
           </ToastProvider>
         </div>
-        <script dangerouslySetInnerHTML={{ __html: "eruda.init();" }} />
       </body>
     </html>
   );

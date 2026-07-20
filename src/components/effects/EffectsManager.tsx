@@ -1,8 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import NeonParticles from "@/components/effects/NeonParticles";
+import { getDevicePerformance, type PerformanceLevel } from "@/lib/devicePerformance";
 
 const CyberGlobe = dynamic(() => import("@/components/effects/CyberGlobe"), {
   ssr: false,
@@ -17,18 +19,27 @@ function isPublicPage(pathname: string): boolean {
 export default function EffectsManager() {
   const pathname = usePathname();
   const show = isPublicPage(pathname);
+  const [level, setLevel] = useState<PerformanceLevel>("medium");
+
+  useEffect(() => {
+    setLevel(getDevicePerformance());
+  }, []);
 
   if (!show) return null;
 
   return (
     <div className="fixed inset-0 pointer-events-none">
       <div className="absolute inset-0 quantum-grid opacity-20" />
-      <div className="absolute inset-0 opacity-80">
-        <CyberGlobe />
-      </div>
-      <div className="absolute inset-0">
-        <NeonParticles />
-      </div>
+      {level === "high" && (
+        <div className="absolute inset-0 opacity-80">
+          <CyberGlobe />
+        </div>
+      )}
+      {level !== "low" && (
+        <div className="absolute inset-0">
+          <NeonParticles />
+        </div>
+      )}
     </div>
   );
 }

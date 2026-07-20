@@ -14,12 +14,9 @@ import {
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/Toast";
 import { registerPushNotifications } from "@/lib/pushClient";
+import { getDevicePerformance, type PerformanceLevel } from "@/lib/devicePerformance";
 // @ts-ignore
 const OnboardingScene = dynamic(
-  () => import("@/components/effects/OnboardingScene"),
-  { ssr: false },
-);
-const OnboardingSceneMobile = dynamic(
   () => import("@/components/effects/OnboardingScene"),
   { ssr: false },
 );
@@ -34,6 +31,7 @@ export default function LoginPage() {
 
   const setUser = useAuthStore((s) => s.setUser);
   const { showToast } = useToast();
+  const [perfLevel, setPerfLevel] = useState<PerformanceLevel>("medium");
 
   // حالة لوحة العرض
   const [panel, setPanel] = useState<Panel>("login");
@@ -97,6 +95,7 @@ export default function LoginPage() {
 
   // ==================== الساعة الرقمية ====================
   useEffect(() => {
+    setPerfLevel(getDevicePerformance());
     const update = () => {
       const now = new Date();
       let h = now.getHours();
@@ -665,18 +664,20 @@ export default function LoginPage() {
         }}
       >
         {/* مطر الماتريكس */}
-        <canvas
-          ref={canvasRef}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            zIndex: 0,
-            pointerEvents: "none",
-          }}
-        />
+        {perfLevel !== "low" && (
+          <canvas
+            ref={canvasRef}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              zIndex: 0,
+              pointerEvents: "none",
+            }}
+          />
+        )}
 
         {/* شبكة كمومية */}
         <div className="absolute inset-0 quantum-grid z-0" />
@@ -794,34 +795,38 @@ export default function LoginPage() {
         </header>
 
         {/* الكرة الأرضية - تتحرك يمين/يسار */}
-        <motion.div
-          animate={{
-            left: globeRight ? "55%" : "5%",
-            top: "50%",
-            y: "-50%",
-          }}
-          transition={{
-            duration: 0.8,
-            type: "spring",
-            stiffness: 70,
-            damping: 16,
-          }}
-          className="absolute z-10 hidden lg:block pointer-events-none"
-          style={{ width: "750px", height: "750px" }}
-        >
-          <div className="w-full h-full">
-            <OnboardingScene showCard={false} />
-          </div>
-        </motion.div>
+        {perfLevel === "high" && (
+          <motion.div
+            animate={{
+              left: globeRight ? "55%" : "5%",
+              top: "50%",
+              y: "-50%",
+            }}
+            transition={{
+              duration: 0.8,
+              type: "spring",
+              stiffness: 70,
+              damping: 16,
+            }}
+            className="absolute z-10 hidden lg:block pointer-events-none"
+            style={{ width: "750px", height: "750px" }}
+          >
+            <div className="w-full h-full">
+              <OnboardingScene showCard={false} />
+            </div>
+          </motion.div>
+        )}
 
         {/* كرة للجوال - كبيرة وواضحة */}
-        <div className="absolute inset-0 z-0 lg:hidden pointer-events-none">
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-[450px] h-[450px] opacity-40">
-              <OnboardingSceneMobile showCard={false} />
+        {perfLevel !== "low" && (
+          <div className="absolute inset-0 z-0 lg:hidden pointer-events-none">
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="w-[450px] h-[450px] opacity-40">
+                <OnboardingScene showCard={false} />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* ==================== الهيدر ==================== */}
         <header
