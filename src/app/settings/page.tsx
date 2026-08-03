@@ -7,6 +7,7 @@ import TwoFATab from "@/components/settings/TwoFATab";
 import { useToast } from "@/components/ui/Toast";
 import WebAuthnTab from "@/components/settings/WebAuthnTab";
 import TelegramTab from "@/components/settings/TelegramTab";
+import InstallAppTab from "@/components/settings/InstallAppTab";
 import { csrfFetch } from "@/lib/csrfClient";
 
 interface ProfileData {
@@ -31,6 +32,7 @@ const tabs = [
   "المصادقة الثنائية",
   "الدخول بالبصمة",
   "ربط Telegram",
+  "تثبيت التطبيق",
 ];
 
 export default function SettingsPage() {
@@ -708,6 +710,9 @@ export default function SettingsPage() {
           )}
           {activeTab === 5 && (
             <TelegramTab onUpdate={() => fetchProfile()} />
+          )}
+          {activeTab === 6 && (
+            <InstallAppTab />
           )}
         </main>
     </div>

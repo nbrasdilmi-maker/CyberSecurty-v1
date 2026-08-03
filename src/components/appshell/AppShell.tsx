@@ -10,6 +10,8 @@ import SearchModal from "@/components/dashboard/SearchModal";
 import BottomNavigation from "@/components/sidebar/BottomNavigation";
 import { SidebarProvider, useSidebar } from "@/components/sidebar/SidebarContext";
 import { useResponsive } from "@/hooks/useResponsive";
+import InstallBanner from "@/components/pwa/InstallBanner";
+import NotificationPrompt from "@/components/pwa/NotificationPrompt";
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -54,6 +56,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       {!isMobile && <Footer />}
+      <InstallBanner />
+      <NotificationPrompt />
     </div>
   );
 }

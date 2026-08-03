@@ -75,3 +75,7 @@ gen-bot-report.mjs
 public/workbox-*.js
 public/*.map
 التقارير
+middleware.ts.p0-backup
+captures
+backup-landing-experience/
+run-capture.bat

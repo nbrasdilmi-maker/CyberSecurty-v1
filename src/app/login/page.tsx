@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import PageTransition from "@/components/layout/PageTransition";
-import { Home } from "lucide-react";
+import LoginFooter from "@/components/login/LoginFooter";
+import LoginHeader from "@/components/login/LoginHeader";
+import LoginTopBar from "@/components/login/LoginTopBar";
+import ErrorAlert from "@/components/login/ErrorAlert";
+import LoginPanel from "@/components/login/LoginPanel";
+import ForgotPanel from "@/components/login/ForgotPanel";
+import ActivatePanel from "@/components/login/ActivatePanel";
+import WebAuthnPrompt from "@/components/login/WebAuthnPrompt";
 
 import {
   startAuthentication,
@@ -380,6 +387,58 @@ export default function LoginPage() {
     }
   };
 
+  // ==================== دخول بالبصمة (منقول لـ LoginPanel) ====================
+  const handleFingerprintLogin = () => {
+    const options = webAuthnLoginOptRef.current;
+    const userId = webAuthnLoginUserIdRef.current;
+    if (!options || !userId) {
+      setError("الرجاء إدخال البريد الإلكتروني أولاً");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    webAuthnLoginOptRef.current = null;
+    webAuthnLoginUserIdRef.current = null;
+
+    // استدعاء startAuthentication بشكل متزامن مع النقرة
+    startAuthentication({ optionsJSON: options })
+      .then(async (authResponse) => {
+        const completeRes = await fetch(
+          "/api/auth/webauthn/login/complete",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, authResponse }),
+          },
+        );
+        const completeData = await completeRes.json();
+        if (!completeData.success)
+          throw new Error(completeData.message);
+        setUser({
+          id: userId || "",
+          email: completeData.email || "",
+          name: completeData.name || "",
+          role: completeData.role,
+          level: completeData.level || "",
+          webAuthnEnabled: true,
+        });
+        if (completeData.role === "ADMIN")
+          router.push("/admin");
+        else if (completeData.role === "MANAGEMENT")
+          router.push("/management");
+        else if (completeData.role === "TEACHER")
+          router.push("/teacher");
+        else router.push("/student");
+      })
+      .catch((err: any) => {
+        setError(err.message || "فشل الدخول بالبصمة");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
   // ==================== استعادة كلمة المرور (Telegram OTP فقط) ====================
   const handleForgotPassword = async () => {
     setError("");
@@ -475,6 +534,64 @@ export default function LoginPage() {
         setLoading(false);
       }
     }
+  };
+
+  // ==================== إعادة إرسال رمز OTP (لـ ForgotPanel) ====================
+  const handleResendOtp = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: forgotIdentifier }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("🔄 تم إعادة الإرسال", "success");
+      } else {
+        setError(data.message || "فشل الإرسال");
+      }
+    } catch {
+      setError("حدث خطأ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==================== طلب مساعدة الأدمن (لـ ForgotPanel) ====================
+  const handleAdminAssistanceRequest = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/bot-control/assistance-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: forgotIdentifier }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("✅ تم إرسال طلب المساعدة", "success");
+        setForgotStep("identifier");
+      } else {
+        setError(data.message || "فشل");
+      }
+    } catch {
+      setError("حدث خطأ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==================== العودة لتسجيل الدخول (لـ ForgotPanel) ====================
+  const handleBackToLogin = () => {
+    switchPanel("login");
+    setForgotStep("identifier");
+    setForgotIdentifier("");
+    setForgotCode("");
+    setForgotNewPass("");
+    setForgotConfirmPass("");
+    setForgotResetToken("");
+    setNoBindingUserName("");
   };
 
   // ==================== تفعيل الحساب ====================
@@ -682,117 +799,7 @@ export default function LoginPage() {
         {/* شبكة كمومية */}
         <div className="absolute inset-0 quantum-grid z-0" />
 
-        {/* ==================== الهيدر ==================== */}
-        <header
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 100,
-            height: 56,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 clamp(14px, 4vw, 36px)",
-            background: "transparent",
-            borderBottom: "1px solid transparent",
-            transition: "border-color 0.5s",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              flexShrink: 0,
-              opacity: 0.85,
-              transition: "opacity 0.3s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.85")}
-          >
-            <div
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 8,
-                background: "transparent",
-                border: "1.5px solid rgba(0,229,255,0.6)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.8rem",
-                fontWeight: 800,
-                color: "#00e5ff",
-                fontFamily: "'Orbitron', sans-serif",
-                transition: "box-shadow 0.4s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.boxShadow =
-                  "0 0 24px rgba(0,229,255,0.25)")
-              }
-              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
-            >
-              CS
-            </div>
-            <span
-              style={{
-                color: "rgba(255,255,255,0.6)",
-                fontWeight: 600,
-                fontSize: "clamp(0.65rem, 1.1vw, 0.82rem)",
-                fontFamily: "'Orbitron', sans-serif",
-                letterSpacing: "1px",
-                transition: "color 0.3s, text-shadow 0.3s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#00e5ff";
-                e.currentTarget.style.textShadow =
-                  "0 0 20px rgba(0,229,255,0.5)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "rgba(255,255,255,0.6)";
-                e.currentTarget.style.textShadow = "none";
-              }}
-            >
-              CYBER CLOUD
-            </span>
-          </div>
-
-          <button
-            onClick={() => router.push("/")}
-            style={{
-              background: "transparent",
-              border: "1px solid rgba(255,255,255,0.06)",
-              color: "rgba(255,255,255,0.5)",
-              fontFamily: "'Cairo', sans-serif",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "6px 16px",
-              borderRadius: 8,
-              fontSize: "clamp(0.7rem, 1vw, 0.78rem)",
-              fontWeight: 600,
-              transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(0,229,255,0.35)";
-              e.currentTarget.style.color = "#00e5ff";
-              e.currentTarget.style.boxShadow = "0 0 24px rgba(0,229,255,0.12)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
-              e.currentTarget.style.color = "rgba(255,255,255,0.5)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            <Home size={14} strokeWidth={1.5} />
-            الرئيسية
-          </button>
-        </header>
+        <LoginHeader />
 
         {/* الكرة الأرضية - تتحرك يمين/يسار */}
         {perfLevel === "high" && (
@@ -829,91 +836,7 @@ export default function LoginPage() {
         )}
 
         {/* ==================== الهيدر ==================== */}
-        <header
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 100,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "clamp(8px, 1.5vw, 14px) clamp(12px, 5vw, 60px)",
-            background: "rgba(2, 4, 8, 0.7)",
-            backdropFilter: "blur(30px)",
-            WebkitBackdropFilter: "blur(30px)",
-            borderBottom: "1px solid rgba(0, 229, 255, 0.08)",
-            boxShadow: "0 4px 30px rgba(0,0,0,0.3)",
-            flexWrap: "wrap",
-            gap: "4px",
-          }}
-        >
-          <div
-            style={{
-              fontFamily: "'Orbitron', sans-serif",
-              fontSize: "clamp(0.75rem, 2.5vw, 1.4rem)",
-              fontWeight: 700,
-              color: "#00e5ff",
-              textShadow: "0 0 12px rgba(0,229,255,0.3)",
-              direction: "ltr",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {clock}
-          </div>
-
-          <div style={{ textAlign: "center", flex: 1, minWidth: 0 }}>
-            <h2
-              style={{
-                fontSize: "clamp(0.7rem, 1.8vw, 1.1rem)",
-                fontWeight: 700,
-                color: "#e6edf3",
-                margin: 0,
-                lineHeight: 1.2,
-              }}
-            >
-              سحابة الأمن السيبراني
-            </h2>
-            <p
-              style={{
-                fontFamily: "'Orbitron', sans-serif",
-                fontSize: "clamp(0.5rem, 1.2vw, 0.7rem)",
-                color: "rgba(0,229,255,0.7)",
-                textTransform: "uppercase",
-                letterSpacing: "1px",
-                margin: "1px 0 0",
-              }}
-            >
-              Cybersecurity Cloud
-            </p>
-          </div>
-
-          <div style={{ textAlign: "right", minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: "clamp(0.65rem, 2vw, 1rem)",
-                color: "#e6edf3",
-                fontWeight: 700,
-                margin: 0,
-                lineHeight: 1.2,
-              }}
-            >
-              جامعة ذمار - كلية الحاسبات
-            </div>
-            <p
-              style={{
-                fontSize: "clamp(0.45rem, 1.2vw, 0.65rem)",
-                color: "rgba(0,229,255,0.6)",
-                fontFamily: "'Orbitron', sans-serif",
-                fontWeight: 500,
-                margin: "1px 0 0",
-              }}
-            >
-              Cyber Security Dept.
-            </p>
-          </div>
-        </header>
+        <LoginTopBar clock={clock} />
 
         {/* ==================== المحتوى الرئيسي ==================== */}
         <div
@@ -930,1358 +853,98 @@ export default function LoginPage() {
           <AnimatePresence mode="wait">
             {/* ========== لوحة تسجيل الدخول ========== */}
             {panel === "login" && (
-              <motion.div
-                key="login"
-                initial={{ opacity: 0, x: globeRight ? -80 : 80 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: globeRight ? -80 : 80 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                style={glassPanelStyle}
-              >
-                <h2
-                  style={{
-                    fontSize: "1.4rem",
-                    fontWeight: 800,
-                    marginBottom: 4,
-                  }}
-                >
-                  مرحباً بكم في سحابة الأمن السيبراني
-                </h2>
-                <p
-                  style={{
-                    fontFamily: "'Orbitron', sans-serif",
-                    fontSize: "0.85rem",
-                    color: "#00e5ff",
-                    letterSpacing: 1.5,
-                    marginBottom: 15,
-                  }}
-                >
-                  Welcome to Cyber Security Cloud
-                </p>
-
-                {error && (
-                  <div
-                    style={{
-                      background: "rgba(248, 81, 73, 0.1)",
-                      border: "1px solid #f85149",
-                      color: "#f85149",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      marginBottom: "15px",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    {error}
-                  </div>
-                )}
-
-                <form onSubmit={handleLogin}>
-                  <input
-                    type="text"
-                    placeholder="الاسم الرقمي (Username/Email)"
-                    style={inputStyle}
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                  />
-                  <div style={{ position: "relative" }}>
-                    <input
-                      ref={passwordRef}
-                      type={showPassword ? "text" : "password"}
-                      placeholder="مفتاح الدخول (Password)"
-                      style={inputStyle}
-                      required
-                    />
-                    <span
-                      onClick={() => setShowPassword(!showPassword)}
-                      style={{
-                        position: "absolute",
-                        left: 12,
-                        top: 13,
-                        cursor: "pointer",
-                        color: "#8b949e",
-                        zIndex: 5,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {showPassword ? (
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#8b949e"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                          <line x1="1" y1="1" x2="23" y2="23" />
-                        </svg>
-                      ) : (
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#8b949e"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                      )}
-                    </span>
-                  </div>
-
-                  {/* حقل 2FA */}
-                  {loginStep === "twofa" && (
-                    <input
-                      type="text"
-                      placeholder="🔐 كود المصادقة الثنائية (Google Authenticator)"
-                      style={{
-                        ...inputStyle,
-                        border: "1px solid rgba(255, 202, 40, 0.4)",
-                      }}
-                      value={twoFACode}
-                      onChange={(e) => setTwoFACode(e.target.value)}
-                      autoFocus
-                      required
-                    />
-                  )}
-
-                  {/* زران متجاوران */}
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    {/* زر البصمة */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const options = webAuthnLoginOptRef.current;
-                        const userId = webAuthnLoginUserIdRef.current;
-                        if (!options || !userId) {
-                          setError("الرجاء إدخال البريد الإلكتروني أولاً");
-                          return;
-                        }
-
-                        setLoading(true);
-                        setError("");
-                        webAuthnLoginOptRef.current = null;
-                        webAuthnLoginUserIdRef.current = null;
-
-                        // استدعاء startAuthentication بشكل متزامن مع النقرة
-                        startAuthentication({ optionsJSON: options })
-                          .then(async (authResponse) => {
-                            const completeRes = await fetch(
-                              "/api/auth/webauthn/login/complete",
-                              {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ userId, authResponse }),
-                              },
-                            );
-                            const completeData = await completeRes.json();
-                            if (!completeData.success)
-                              throw new Error(completeData.message);
-                            setUser({
-                              id: userId || "",
-                              email: completeData.email || "",
-                              name: completeData.name || "",
-                              role: completeData.role,
-                              level: completeData.level || "",
-                              webAuthnEnabled: true,
-                            });
-                            if (completeData.role === "ADMIN")
-                              router.push("/admin");
-                            else if (completeData.role === "MANAGEMENT")
-                              router.push("/management");
-                            else if (completeData.role === "TEACHER")
-                              router.push("/teacher");
-                            else router.push("/student");
-                          })
-                          .catch((err: any) => {
-                            setError(err.message || "فشل الدخول بالبصمة");
-                          })
-                          .finally(() => {
-                            setLoading(false);
-                          });
-                      }}
-                      disabled={loading}
-                      title="دخول بالبصمة"
-                      style={{
-                        width: "50px",
-                        height: "50px",
-                        padding: "0",
-                        color: "#fff",
-                        border: "1px solid rgba(122, 0, 255, 0.5)",
-                        borderRadius: "14px",
-                        fontWeight: 800,
-                        fontSize: "1.2rem",
-                        cursor: "pointer",
-                        fontFamily: "'Cairo', sans-serif",
-                        background: "rgba(122, 0, 255, 0.15)",
-                        backdropFilter: "blur(10px)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        opacity: loading ? 0.6 : 1,
-                      }}
-                    >
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        {/* خلفية البصمة */}
-                        <rect
-                          x="4"
-                          y="2"
-                          width="16"
-                          height="20"
-                          rx="4"
-                          strokeWidth="1.2"
-                          opacity="0.4"
-                        />
-                        {/* خطوط البصمة */}
-                        <path d="M8 9c0-2.21 1.79-4 4-4s4 1.79 4 4" />
-                        <path
-                          d="M7 11c0-2.76 2.24-5 5-5s5 2.24 5 5"
-                          opacity="0.8"
-                        />
-                        <path
-                          d="M9 12c0-1.66 1.34-3 3-3s3 1.34 3 3"
-                          opacity="0.6"
-                        />
-                        <path d="M8 15c0-2.21 1.79-4 4-4s4 1.79 4 4" />
-                        <path
-                          d="M9 17c0-1.66 1.34-3 3-3s3 1.34 3 3"
-                          opacity="0.8"
-                        />
-                        <path d="M10 18.5c0-.83.67-1.5 1.5-1.5h1c.83 0 1.5.67 1.5 1.5" />
-                        {/* نقطة البصمة المركزية */}
-                        <circle
-                          cx="12"
-                          cy="18.5"
-                          r="1.5"
-                          fill="currentColor"
-                          stroke="none"
-                        />
-                      </svg>
-                    </button>
-
-                    {/* زر تسجيل الدخول */}
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      style={{
-                        flex: 1,
-                        padding: "14px",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "14px",
-                        fontWeight: 800,
-                        fontSize: "1rem",
-                        cursor: "pointer",
-                        fontFamily: "'Cairo', sans-serif",
-                        background: "linear-gradient(135deg, #238636, #2ea043)",
-                        boxShadow: "0 6px 25px rgba(35,134,54,0.35)",
-                        opacity: loading ? 0.6 : 1,
-                      }}
-                    >
-                      {loading
-                        ? "⏳ جاري التحقق..."
-                        : loginStep === "twofa"
-                          ? "تأكيد الكود"
-                          : "تسجيل الدخول"}
-                    </button>
-                  </div>
-                </form>
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: 20,
-                    marginTop: 20,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <span
-                    onClick={() => switchPanel("activate")}
-                    style={{
-                      color: "#00e5ff",
-                      textDecoration: "none",
-                      fontSize: "0.85rem",
-                      padding: "6px 14px",
-                      borderRadius: "20px",
-                      background: "rgba(0,229,255,0.06)",
-                      border: "1px solid rgba(0,229,255,0.2)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    تفعيل الحساب
-                  </span>
-                  <span
-                    onClick={() => switchPanel("forgot")}
-                    style={{
-                      color: "#00e5ff",
-                      textDecoration: "none",
-                      fontSize: "0.85rem",
-                      padding: "6px 14px",
-                      borderRadius: "20px",
-                      background: "rgba(0,229,255,0.06)",
-                      border: "1px solid rgba(0,229,255,0.2)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    نسيت كلمة المرور
-                  </span>
-                </div>
-              </motion.div>
+              <LoginPanel
+                username={username}
+                setUsername={setUsername}
+                passwordRef={passwordRef}
+                showPassword={showPassword}
+                setShowPassword={setShowPassword}
+                loginStep={loginStep}
+                twoFACode={twoFACode}
+                setTwoFACode={setTwoFACode}
+                error={error}
+                loading={loading}
+                handleLogin={handleLogin}
+                onFingerprintLogin={handleFingerprintLogin}
+                switchPanel={switchPanel}
+                globeRight={globeRight}
+                inputStyle={inputStyle}
+                btnStyle={btnStyle}
+                glassPanelStyle={glassPanelStyle}
+              />
             )}
 
             {/* ========== لوحة تفعيل الحساب (4 مراحل) ========== */}
+                        {/* ========== لوحة تفعيل الحساب (4 مراحل) ========== */}
             {panel === "activate" && (
-              <motion.div
-                key={`activate-${activateStep}`}
-                initial={{ opacity: 0, x: -80 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -80 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                style={glassPanelStyle}
-              >
-                <h2
-                  style={{
-                    color: "#00e5ff",
-                    fontSize: "1.3rem",
-                    marginBottom: 4,
-                  }}
-                >
-                  تفعيل الحساب
-                </h2>
-                <p
-                  style={{
-                    color: "#8b949e",
-                    fontSize: "0.8rem",
-                    marginBottom: 10,
-                  }}
-                >
-                  المرحلة{" "}
-                  {activateStep === "code"
-                    ? "1"
-                    : activateStep === "username"
-                      ? "2"
-                      : activateStep === "password"
-                        ? "3"
-                        : "4"}{" "}
-                  من 4
-                </p>
-
-                {error && (
-                  <div
-                    style={{
-                      background: "rgba(248,81,73,0.1)",
-                      border: "1px solid #f85149",
-                      color: "#f85149",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      marginBottom: "15px",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    {error}
-                  </div>
-                )}
-
-                {/* ===== المرحلة 1: كود التفعيل ===== */}
-                {activateStep === "code" && (
-                  <>
-                    <p
-                      style={{
-                        color: "#8b949e",
-                        fontSize: "0.85rem",
-                        marginBottom: 12,
-                      }}
-                    >
-                      أدخل كود التفعيل المرسل إليك
-                    </p>
-                    <input
-                      type="text"
-                      placeholder="كود التفعيل"
-                      style={inputStyle}
-                      value={activateCode}
-                      onChange={(e) => setActivateCode(e.target.value)}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && handleActivateCode()
-                      }
-                      required
-                    />
-                    <button
-                      onClick={handleActivateCode}
-                      disabled={loading || !activateCode.trim()}
-                      style={{
-                        ...btnStyle,
-                        background: "linear-gradient(135deg, #238636, #2ea043)",
-                        boxShadow: "0 6px 25px rgba(35,134,54,0.35)",
-                        opacity: loading ? 0.6 : 1,
-                      }}
-                    >
-                      {loading ? "⏳ جاري التحقق..." : "التحقق من الكود"}
-                    </button>
-                  </>
-                )}
-
-                {/* ===== المرحلة 2: اسم المستخدم (مولد تلقائياً) ===== */}
-                {activateStep === "username" && activateUserInfo && (
-                  <>
-                    {(() => {
-                      const parts = activateUserInfo.name.split(" ");
-                      const first = parts[0];
-                      const last =
-                        parts.length > 1 ? parts[parts.length - 1] : "";
-                      const masked =
-                        parts.length > 2
-                          ? `${first} ${"•".repeat(Math.max(6, (activateUserInfo.name.length - first.length - last.length) * 2))} ${last}`
-                          : activateUserInfo.name;
-                      const roleLabel =
-                        activateUserInfo.role === "ADMIN"
-                          ? "الأدمن"
-                          : activateUserInfo.role === "MANAGEMENT"
-                            ? "الإداري"
-                            : activateUserInfo.role === "TEACHER"
-                              ? "المعلم"
-                              : "الطالب";
-                      const levelLabel = activateUserInfo.level || "";
-                      return (
-                        <div
-                          style={{
-                            background: "rgba(0,229,255,0.06)",
-                            border: "1px solid rgba(0,229,255,0.2)",
-                            borderRadius: "14px",
-                            padding: "16px",
-                            marginBottom: 15,
-                            textAlign: "center",
-                          }}
-                        >
-                          <p
-                            style={{
-                              color: "#00e5ff",
-                              fontSize: "1rem",
-                              fontWeight: 600,
-                              margin: "0 0 4px",
-                            }}
-                          >
-                            مرحباً ب{roleLabel}
-                            {levelLabel ? ` - ${levelLabel}` : ""}
-                          </p>
-                          <p
-                            style={{
-                              color: "#8b949e",
-                              fontSize: "1.3rem",
-                              fontWeight: 500,
-                              margin: "8px 0",
-                              direction: "rtl",
-                            }}
-                          >
-                            {masked}
-                          </p>
-                        </div>
-                      );
-                    })()}
-
-                    <div
-                      style={{
-                        background: "rgba(0,229,255,0.06)",
-                        border: "1px solid rgba(0,229,255,0.2)",
-                        borderRadius: "14px",
-                        padding: "14px",
-                        marginBottom: 12,
-                        textAlign: "center",
-                      }}
-                    >
-                      <p
-                        style={{
-                          color: "#8b949e",
-                          fontSize: "0.75rem",
-                          margin: "0 0 4px",
-                        }}
-                      >
-                        ✅ تم التحقق بنجاح — اسم المستخدم الخاص بك:
-                      </p>
-                      <p
-                        style={{
-                          color: "#00e5ff",
-                          fontSize: "1.3rem",
-                          fontWeight: 700,
-                          fontFamily: "'Orbitron', sans-serif",
-                          direction: "ltr",
-                          margin: "8px 0",
-                          letterSpacing: 1,
-                          userSelect: "all",
-                        }}
-                      >
-                        {activateUserInfo.username}
-                      </p>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(
-                            activateUserInfo.username,
-                          );
-                          showToast("📋 تم نسخ اسم المستخدم", "success");
-                        }}
-                        style={{
-                          padding: "6px 18px",
-                          borderRadius: "10px",
-                          border: "1px solid rgba(0,229,255,0.3)",
-                          background: "rgba(0,229,255,0.1)",
-                          color: "#00e5ff",
-                          cursor: "pointer",
-                          fontSize: "0.8rem",
-                          fontFamily: "'Cairo', sans-serif",
-                        }}
-                      >
-                        📋 نسخ اسم المستخدم
-                      </button>
-                    </div>
-
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button
-                        onClick={() => setActivateStep("password")}
-                        style={{
-                          flex: 1,
-                          ...btnStyle,
-                          background:
-                            "linear-gradient(135deg, #238636, #2ea043)",
-                          boxShadow: "0 6px 25px rgba(35,134,54,0.35)",
-                        }}
-                      >
-                        متابعة ←
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {/* ===== المرحلة 3: كلمة المرور ===== */}
-                {activateStep === "password" && (
-                  <>
-                    <p
-                      style={{
-                        color: "#8b949e",
-                        fontSize: "0.85rem",
-                        marginBottom: 12,
-                        textAlign: "right",
-                      }}
-                    >
-                      أدخل كلمة مرور قوية لحماية حسابك:
-                    </p>
-                    <input
-                      type="password"
-                      placeholder="كلمة المرور (8 أحرف على الأقل)"
-                      style={inputStyle}
-                      value={activatePassword}
-                      onChange={(e) => setActivatePassword(e.target.value)}
-                      required
-                    />
-                    <input
-                      type="password"
-                      placeholder="تأكيد كلمة المرور"
-                      style={inputStyle}
-                      value={activateConfirm}
-                      onChange={(e) => setActivateConfirm(e.target.value)}
-                      required
-                    />
-                    <button
-                      onClick={handleActivatePassword}
-                      disabled={loading}
-                      style={{
-                        ...btnStyle,
-                        background: "linear-gradient(135deg, #238636, #2ea043)",
-                        boxShadow: "0 6px 25px rgba(35,134,54,0.35)",
-                        opacity: loading ? 0.6 : 1,
-                      }}
-                    >
-                      {loading ? "⏳ جاري التفعيل..." : "تفعيل الحساب"}
-                    </button>
-                    <button
-                      onClick={() => setActivateStep("username")}
-                      style={{
-                        ...btnStyle,
-                        background: "transparent",
-                        border: "1px solid rgba(0,229,255,0.2)",
-                        color: "#00e5ff",
-                        marginTop: 8,
-                      }}
-                    >
-                      → العودة
-                    </button>
-                  </>
-                )}
-
-                {/* ===== المرحلة 4: ربط Telegram (اختياري) ===== */}
-                {activateStep === "binding" && (
-                  <>
-                    <p
-                      style={{
-                        color: "#8b949e",
-                        fontSize: "0.85rem",
-                        marginBottom: 8,
-                      }}
-                    >
-                      ✅ تم تفعيل حسابك بنجاح!
-                    </p>
-                    <p
-                      style={{
-                        color: "#8b949e",
-                        fontSize: "0.8rem",
-                        marginBottom: 12,
-                      }}
-                    >
-                      يمكنك ربط حسابك مع Telegram لاستعادة كلمة المرور بسهولة
-                      (اختياري)
-                    </p>
-
-                    {!bindCode ? (
-                      <button
-                        onClick={handleInitiateBinding}
-                        disabled={loading}
-                        style={{
-                          width: "100%",
-                          ...btnStyle,
-                          background:
-                            "linear-gradient(135deg, #2188ff, #0066cc)",
-                          boxShadow: "0 6px 25px rgba(33,136,255,0.35)",
-                          opacity: loading ? 0.6 : 1,
-                        }}
-                      >
-                        {loading ? "⏳ جاري..." : "🔗 ربط حساب Telegram"}
-                      </button>
-                    ) : (
-                      <div
-                        style={{
-                          background: "rgba(0,229,255,0.06)",
-                          border: "1px solid rgba(0,229,255,0.2)",
-                          borderRadius: "14px",
-                          padding: "14px",
-                          marginBottom: 12,
-                          textAlign: "center",
-                        }}
-                      >
-                        <p
-                          style={{
-                            color: "#8b949e",
-                            fontSize: "0.75rem",
-                            margin: "0 0 4px",
-                          }}
-                        >
-                          أرسل هذا الكود إلى البوت:
-                        </p>
-                        <p
-                          style={{
-                            color: "#00e5ff",
-                            fontSize: "1.3rem",
-                            fontWeight: 700,
-                            fontFamily: "'Orbitron', sans-serif",
-                            direction: "ltr",
-                            margin: "8px 0",
-                            letterSpacing: 2,
-                            userSelect: "all",
-                          }}
-                        >
-                          {bindCode}
-                        </p>
-                        <p
-                          style={{
-                            color: "#8b949e",
-                            fontSize: "0.75rem",
-                            margin: 0,
-                          }}
-                        >
-                          @cyber_security_cloud_bot
-                        </p>
-                      </div>
-                    )}
-
-                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                      <button
-                        onClick={handleSkipBinding}
-                        style={{
-                          flex: 1,
-                          ...btnStyle,
-                          background:
-                            "linear-gradient(135deg, #238636, #2ea043)",
-                          boxShadow: "0 6px 25px rgba(35,134,54,0.35)",
-                        }}
-                      >
-                        {bindCode ? "تم ✅" : "تخطي ←"}
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {activateStep === "code" && (
-                  <span
-                    onClick={() => switchPanel("login")}
-                    style={{
-                      display: "inline-block",
-                      marginTop: 15,
-                      color: "#00e5ff",
-                      cursor: "pointer",
-                      fontSize: "0.85rem",
-                      padding: "6px 14px",
-                      borderRadius: "20px",
-                      background: "rgba(0,229,255,0.06)",
-                      border: "1px solid rgba(0,229,255,0.2)",
-                    }}
-                  >
-                    ← العودة إلى تسجيل الدخول
-                  </span>
-                )}
-              </motion.div>
+              <ActivatePanel
+                activateStep={activateStep}
+                setActivateStep={setActivateStep}
+                activateCode={activateCode}
+                setActivateCode={setActivateCode}
+                activatePassword={activatePassword}
+                setActivatePassword={setActivatePassword}
+                activateConfirm={activateConfirm}
+                setActivateConfirm={setActivateConfirm}
+                activateUserInfo={activateUserInfo}
+                bindCode={bindCode}
+                bindingDone={bindingDone}
+                error={error}
+                loading={loading}
+                handleActivateCode={handleActivateCode}
+                handleActivatePassword={handleActivatePassword}
+                handleInitiateBinding={handleInitiateBinding}
+                handleSkipBinding={handleSkipBinding}
+                switchPanel={switchPanel}
+                showToast={showToast}
+                inputStyle={inputStyle}
+                btnStyle={btnStyle}
+                glassPanelStyle={glassPanelStyle}
+              />
             )}
 
-            {/* ========== لوحة استعادة كلمة المرور ========== */}
+            {/* ========== لوحة استعادة كلمة المرور ========== */}{/* ========== لوحة استعادة كلمة المرور ========== */}
             {panel === "forgot" && (
-              <motion.div
-                key="forgot"
-                initial={{ opacity: 0, x: -80 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -80 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                style={glassPanelStyle}
-              >
-                <h3
-                  style={{
-                    color: "#00e5ff",
-                    marginBottom: 15,
-                    fontSize: "1.2rem",
-                  }}
-                >
-                  {forgotStep === "identifier"
-                    ? "استعادة كلمة المرور"
-                    : forgotStep === "otp"
-                      ? "إدخال رمز التحقق"
-                      : "كلمة مرور جديدة"}
-                </h3>
-                <p
-                  style={{
-                    color: "#8b949e",
-                    fontSize: "0.78rem",
-                    marginBottom: 10,
-                  }}
-                >
-                  المرحلة{" "}
-                  {forgotStep === "identifier"
-                    ? "1"
-                    : forgotStep === "otp"
-                      ? "2"
-                      : "3"}{" "}
-                  من 3
-                </p>
-
-                {error && (
-                  <div
-                    style={{
-                      background: "rgba(248,81,73,0.1)",
-                      border: "1px solid #f85149",
-                      color: "#f85149",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      marginBottom: "15px",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    {error}
-                  </div>
-                )}
-
-                {forgotStep === "identifier" && (
-                  <>
-                    <p
-                      style={{
-                        color: "#8b949e",
-                        fontSize: "0.85rem",
-                        marginBottom: 15,
-                      }}
-                    >
-                      أدخل بريدك الإلكتروني أو اسم المستخدم
-                    </p>
-                    <input
-                      type="text"
-                      placeholder="البريد الإلكتروني أو اسم المستخدم"
-                      style={inputStyle}
-                      value={forgotIdentifier}
-                      onChange={(e) => setForgotIdentifier(e.target.value)}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && !loading && handleForgotPassword()
-                      }
-                      required
-                    />
-                    <button
-                      onClick={handleForgotPassword}
-                      disabled={loading}
-                      style={{
-                        ...btnStyle,
-                        background: "linear-gradient(135deg, #2188ff, #0066cc)",
-                        boxShadow: "0 6px 25px rgba(33,136,255,0.35)",
-                        opacity: loading ? 0.6 : 1,
-                      }}
-                    >
-                      {loading ? "⏳ جاري البحث..." : "بحث"}
-                    </button>
-                  </>
-                )}
-
-                {forgotStep === "otp" && (
-                  <>
-                    {!noBindingUserName ? (
-                      <>
-                        <p
-                          style={{
-                            color: "#8b949e",
-                            fontSize: "0.85rem",
-                            marginBottom: 8,
-                          }}
-                        >
-                          تم إرسال رمز التحقق إلى حسابك في Telegram
-                        </p>
-                        <p
-                          style={{
-                            color: "#00e5ff",
-                            fontSize: "1.1rem",
-                            fontWeight: 700,
-                            marginBottom: 15,
-                            direction: "ltr",
-                            textAlign: "center",
-                          }}
-                        >
-                          @cyber_security_cloud_bot
-                        </p>
-                        <input
-                          type="text"
-                          placeholder="رمز التحقق (6 أرقام)"
-                          style={inputStyle}
-                          value={forgotCode}
-                          onChange={(e) => setForgotCode(e.target.value)}
-                          required
-                          maxLength={6}
-                        />
-                        <button
-                          onClick={handleForgotPassword}
-                          disabled={loading}
-                          style={{
-                            ...btnStyle,
-                            background:
-                              "linear-gradient(135deg, #2188ff, #0066cc)",
-                            boxShadow: "0 6px 25px rgba(33,136,255,0.35)",
-                            opacity: loading ? 0.6 : 1,
-                          }}
-                        >
-                          {loading ? "⏳ جاري التحقق..." : "تحقق من الكود"}
-                        </button>
-                        <button
-                          onClick={async () => {
-                            setLoading(true);
-                            setError("");
-                            try {
-                              const res = await fetch(
-                                "/api/auth/forgot-password",
-                                {
-                                  method: "POST",
-                                  headers: {
-                                    "Content-Type": "application/json",
-                                  },
-                                  body: JSON.stringify({
-                                    identifier: forgotIdentifier,
-                                  }),
-                                },
-                              );
-                              const data = await res.json();
-                              if (data.success) {
-                                showToast("🔄 تم إعادة الإرسال", "success");
-                              } else {
-                                setError(data.message || "فشل الإرسال");
-                              }
-                            } catch {
-                              setError("حدث خطأ");
-                            } finally {
-                              setLoading(false);
-                            }
-                          }}
-                          disabled={loading}
-                          style={{
-                            ...btnStyle,
-                            background: "transparent",
-                            border: "1px solid rgba(255,202,40,0.3)",
-                            color: "#ffca28",
-                            marginTop: 8,
-                          }}
-                        >
-                          {loading ? "⏳ جاري..." : "🔄 إعادة إرسال الرمز"}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <p
-                          style={{
-                            color: "#8b949e",
-                            fontSize: "0.85rem",
-                            marginBottom: 8,
-                          }}
-                        >
-                          {noBindingUserName}، حسابك غير مرتبط بـ Telegram.
-                        </p>
-                        <p
-                          style={{
-                            color: "#8b949e",
-                            fontSize: "0.8rem",
-                            marginBottom: 12,
-                          }}
-                        >
-                          يمكنك طلب مساعدة الأدمن لإعادة تعيين كلمة المرور
-                          يدوياً.
-                        </p>
-                        <button
-                          onClick={async () => {
-                            setLoading(true);
-                            try {
-                              const res = await fetch(
-                                "/api/admin/bot-control/assistance-request",
-                                {
-                                  method: "POST",
-                                  headers: {
-                                    "Content-Type": "application/json",
-                                  },
-                                  body: JSON.stringify({
-                                    identifier: forgotIdentifier,
-                                  }),
-                                },
-                              );
-                              const data = await res.json();
-                              if (data.success) {
-                                showToast(
-                                  "✅ تم إرسال طلب المساعدة",
-                                  "success",
-                                );
-                                setForgotStep("identifier");
-                              } else {
-                                setError(data.message || "فشل");
-                              }
-                            } catch {
-                              setError("حدث خطأ");
-                            } finally {
-                              setLoading(false);
-                            }
-                          }}
-                          disabled={loading}
-                          style={{
-                            ...btnStyle,
-                            background:
-                              "linear-gradient(135deg, #ffca28, #f0b400)",
-                            color: "#000",
-                            fontWeight: 800,
-                            opacity: loading ? 0.6 : 1,
-                          }}
-                        >
-                          {loading ? "⏳ جاري..." : "🆘 طلب مساعدة الأدمن"}
-                        </button>
-                      </>
-                    )}
-                    <button
-                      onClick={() => {
-                        setForgotStep("identifier");
-                        setError("");
-                      }}
-                      style={{
-                        ...btnStyle,
-                        background: "transparent",
-                        border: "1px solid rgba(255,255,255,0.15)",
-                        color: "#8b949e",
-                        marginTop: 4,
-                      }}
-                    >
-                      🔙 العودة
-                    </button>
-                  </>
-                )}
-
-                {forgotStep === "newPassword" && (
-                  <>
-                    <input
-                      type="password"
-                      placeholder="كلمة المرور الجديدة"
-                      style={inputStyle}
-                      value={forgotNewPass}
-                      onChange={(e) => setForgotNewPass(e.target.value)}
-                      required
-                    />
-                    <input
-                      type="password"
-                      placeholder="تأكيد كلمة المرور الجديدة"
-                      style={inputStyle}
-                      value={forgotConfirmPass}
-                      onChange={(e) => setForgotConfirmPass(e.target.value)}
-                      required
-                    />
-                    <button
-                      onClick={handleForgotPassword}
-                      disabled={loading}
-                      style={{
-                        ...btnStyle,
-                        background: "linear-gradient(135deg, #2188ff, #0066cc)",
-                        boxShadow: "0 6px 25px rgba(33,136,255,0.35)",
-                        opacity: loading ? 0.6 : 1,
-                      }}
-                    >
-                      {loading ? "⏳ جاري الحفظ..." : "حفظ كلمة المرور"}
-                    </button>
-                    <button
-                      onClick={() => setForgotStep("otp")}
-                      style={{
-                        ...btnStyle,
-                        background: "transparent",
-                        border: "1px solid rgba(0,229,255,0.2)",
-                        color: "#00e5ff",
-                        marginTop: 8,
-                      }}
-                    >
-                      → العودة
-                    </button>
-                  </>
-                )}
-
-                <span
-                  onClick={() => {
-                    switchPanel("login");
-                    setForgotStep("identifier");
-                    setForgotIdentifier("");
-                    setForgotCode("");
-                    setForgotNewPass("");
-                    setForgotConfirmPass("");
-                    setForgotResetToken("");
-                    setNoBindingUserName("");
-                  }}
-                  style={{
-                    display: "inline-block",
-                    marginTop: 15,
-                    color: "#00e5ff",
-                    cursor: "pointer",
-                    fontSize: "0.85rem",
-                    padding: "6px 14px",
-                    borderRadius: "20px",
-                    background: "rgba(0,229,255,0.06)",
-                    border: "1px solid rgba(0,229,255,0.2)",
-                  }}
-                >
-                  ← العودة إلى تسجيل الدخول
-                </span>
-              </motion.div>
+              <ForgotPanel
+                forgotStep={forgotStep}
+                setForgotStep={setForgotStep}
+                forgotIdentifier={forgotIdentifier}
+                setForgotIdentifier={setForgotIdentifier}
+                forgotCode={forgotCode}
+                setForgotCode={setForgotCode}
+                forgotNewPass={forgotNewPass}
+                setForgotNewPass={setForgotNewPass}
+                forgotConfirmPass={forgotConfirmPass}
+                setForgotConfirmPass={setForgotConfirmPass}
+                forgotResetToken={forgotResetToken}
+                noBindingUserName={noBindingUserName}
+                error={error}
+                setError={setError}
+                loading={loading}
+                handleForgotPassword={handleForgotPassword}
+                handleResendOtp={handleResendOtp}
+                handleAdminAssistanceRequest={handleAdminAssistanceRequest}
+                switchPanel={switchPanel}
+                onBackToLogin={handleBackToLogin}
+                inputStyle={inputStyle}
+                btnStyle={btnStyle}
+                glassPanelStyle={glassPanelStyle}
+              />
             )}
           </AnimatePresence>
         </div>
 
         {/* ==================== نافذة تفعيل البصمة ==================== */}
         {showWebAuthnPrompt && (
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 200,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "rgba(0,0,0,0.7)",
-              backdropFilter: "blur(8px)",
-              padding: 20,
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              style={{
-                background: "rgba(10, 20, 40, 0.95)",
-                backdropFilter: "blur(30px)",
-                border: "1px solid rgba(0, 229, 255, 0.25)",
-                borderRadius: "24px",
-                padding: "clamp(25px, 4vw, 40px)",
-                maxWidth: "430px",
-                width: "100%",
-                textAlign: "center",
-                boxShadow: "0 0 80px rgba(0, 229, 255, 0.15)",
-              }}
-            >
-              {webAuthnDone ? (
-                <>
-                  <div style={{ fontSize: "3rem", marginBottom: 15 }}>✅</div>
-                  <h3
-                    style={{
-                      color: "#39ff14",
-                      marginBottom: 8,
-                      fontSize: "1.3rem",
-                    }}
-                  >
-                    تم تفعيل البصمة بنجاح!
-                  </h3>
-                  <p style={{ color: "#8b949e", fontSize: "0.9rem" }}>
-                    يمكنك الآن الدخول ببصمة إصبعك في المرة القادمة
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div
-                    style={{
-                      width: 70,
-                      height: 70,
-                      margin: "0 auto 15px",
-                      borderRadius: "50%",
-                      background: "rgba(122, 0, 255, 0.15)",
-                      border: "2px solid rgba(122, 0, 255, 0.4)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <svg
-                      width="36"
-                      height="36"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#a855f7"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M8 9c0-2.21 1.79-4 4-4s4 1.79 4 4" />
-                      <path
-                        d="M7 11c0-2.76 2.24-5 5-5s5 2.24 5 5"
-                        opacity="0.8"
-                      />
-                      <path
-                        d="M9 12c0-1.66 1.34-3 3-3s3 1.34 3 3"
-                        opacity="0.6"
-                      />
-                      <path d="M8 15c0-2.21 1.79-4 4-4s4 1.79 4 4" />
-                      <path d="M10 18.5c0-.83.67-1.5 1.5-1.5h1c.83 0 1.5.67 1.5 1.5" />
-                      <circle
-                        cx="12"
-                        cy="18.5"
-                        r="1.5"
-                        fill="currentColor"
-                        stroke="none"
-                      />
-                    </svg>
-                  </div>
-                  <h3
-                    style={{
-                      color: "#fff",
-                      marginBottom: 8,
-                      fontSize: "1.3rem",
-                    }}
-                  >
-                    تفعيل الدخول بالبصمة
-                  </h3>
-                  <p
-                    style={{
-                      color: "#8b949e",
-                      fontSize: "0.9rem",
-                      marginBottom: 25,
-                    }}
-                  >
-                    هل تريد تفعيل الدخول السريع باستخدام بصمة إصبعك؟
-                    <br />
-                    <span style={{ fontSize: "0.8rem", color: "#5a6a7a" }}>
-                      (Passkey - متوافق مع Windows Hello و Touch ID)
-                    </span>
-                  </p>
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button
-                      onClick={handleSkipWebAuthn}
-                      disabled={webAuthnRegistering}
-                      style={{
-                        flex: 1,
-                        padding: "14px",
-                        border: "1px solid rgba(255,255,255,0.15)",
-                        borderRadius: "14px",
-                        background: "transparent",
-                        color: "#8b949e",
-                        fontWeight: 700,
-                        fontSize: "0.95rem",
-                        cursor: "pointer",
-                        fontFamily: "'Cairo', sans-serif",
-                      }}
-                    >
-                      ليس الآن
-                    </button>
-                    <button
-                      onClick={handleEnableWebAuthn}
-                      disabled={webAuthnRegistering}
-                      style={{
-                        flex: 1,
-                        padding: "14px",
-                        border: "none",
-                        borderRadius: "14px",
-                        background: webAuthnRegistering
-                          ? "rgba(122, 0, 255, 0.3)"
-                          : "linear-gradient(135deg, #7a00ff, #a855f7)",
-                        color: "#fff",
-                        fontWeight: 700,
-                        fontSize: "0.95rem",
-                        cursor: "pointer",
-                        fontFamily: "'Cairo', sans-serif",
-                        opacity: webAuthnRegistering ? 0.7 : 1,
-                      }}
-                    >
-                      {webAuthnRegistering
-                        ? "⏳ جاري التسجيل..."
-                        : "نعم، فعّل البصمة"}
-                    </button>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          </div>
+          <WebAuthnPrompt
+            webAuthnDone={webAuthnDone}
+            webAuthnRegistering={webAuthnRegistering}
+            handleEnableWebAuthn={handleEnableWebAuthn}
+            handleSkipWebAuthn={handleSkipWebAuthn}
+          />
         )}
 
-        {/* ==================== الفوتر ==================== */}
-        <footer
-          style={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 50,
-            padding: "clamp(8px, 1.5vw, 14px) 16px",
-            textAlign: "center",
-            background: "transparent",
-            borderTop: "1px solid rgba(255,255,255,0.03)",
-            transition: "border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderTopColor = "rgba(0,229,255,0.06)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderTopColor = "rgba(255,255,255,0.03)";
-          }}
-        >
-          <div
-            style={{
-              fontSize: "clamp(0.5rem, 1vw, 0.72rem)",
-              color: "rgba(255,255,255,0.3)",
-              fontWeight: 400,
-              transition: "color 0.5s",
-            }}
-          >
-            <span
-              onClick={() => setShowTeam((p) => !p)}
-              style={{
-                color: "rgba(255,255,255,0.3)",
-                cursor: "pointer",
-                transition: "color 0.4s",
-                userSelect: "none",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#00e5ff";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "rgba(255,255,255,0.3)";
-              }}
-            >
-              {showTeam ? "▲" : "▼"} فريق "طليعة الأمن السيبراني" | Cyber
-              Vanguard
-            </span>
-
-            <AnimatePresence>
-              {showTeam && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                  animate={{ height: "auto", opacity: 1, marginTop: 8 }}
-                  exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                  transition={{ duration: 0.35, ease: "easeInOut" }}
-                  style={{
-                    overflow: "hidden",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 4,
-                  }}
-                >
-                  {[
-                    { name: "محمد إبراهيم الديلمي", color: "#00e5ff" },
-                    { name: "أحمد الهيدمة", color: "#7c3aed" },
-                    { name: "عبدالجليل الجبلي", color: "#10b981" },
-                    { name: "أسامة شرهان", color: "#f59e0b" },
-                    { name: "قناف العجيبي", color: "#ef4444" },
-                  ].map((member, i) => (
-                    <motion.div
-                      key={member.name}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.08, duration: 0.3 }}
-                    >
-                      <span
-                        style={{
-                          color: "rgba(255,255,255,0.35)",
-                          fontWeight: 500,
-                          cursor: "default",
-                          transition: "color 0.4s, text-shadow 0.4s",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.color = member.color;
-                          e.currentTarget.style.textShadow = `0 0 24px ${member.color}66, 0 0 48px ${member.color}22`;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.color =
-                            "rgba(255,255,255,0.35)";
-                          e.currentTarget.style.textShadow = "none";
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: "50%",
-                            background: member.color,
-                            display: "inline-block",
-                            opacity: 0.4,
-                          }}
-                        />
-                        {member.name}
-                      </span>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-          <div
-            style={{
-              fontFamily: "'Orbitron', sans-serif",
-              fontSize: "clamp(0.4rem, 0.8vw, 0.55rem)",
-              color: "rgba(255,255,255,0.15)",
-              marginTop: 2,
-              letterSpacing: "0.5px",
-              transition: "color 0.5s",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.color = "rgba(255,255,255,0.3)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.color = "rgba(255,255,255,0.15)")
-            }
-          >
-            OFFICIAL CYBER SECURITY PLATFORM — DHAMAR UNIVERSITY &copy; 2026
-          </div>
-        </footer>
+        <LoginFooter showTeam={showTeam} onToggleTeam={() => setShowTeam((p) => !p)} />
       </div>
     </PageTransition>
   );

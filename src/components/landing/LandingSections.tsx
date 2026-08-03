@@ -924,10 +924,18 @@ export function TeamSection() {
             borderRadius: "100px",
             padding: "8px 24px",
             marginBottom: 20,
-            boxShadow: "0 0 30px rgba(0, 229, 255, 0.15), 0 0 60px rgba(124, 58, 237, 0.08), inset 0 0 20px rgba(0, 229, 255, 0.05)",
+            boxShadow:
+              "0 0 30px rgba(0, 229, 255, 0.15), 0 0 60px rgba(124, 58, 237, 0.08), inset 0 0 20px rgba(0, 229, 255, 0.05)",
           }}
         >
-          <span style={{ fontSize: "1.1rem", filter: "drop-shadow(0 0 8px rgba(0,229,255,0.5))" }}>⚡</span>
+          <span
+            style={{
+              fontSize: "1.1rem",
+              filter: "drop-shadow(0 0 8px rgba(0,229,255,0.5))",
+            }}
+          >
+            ⚡
+          </span>
           <span
             style={{
               background: "linear-gradient(90deg, #00e5ff, #a78bfa, #7c3aed)",
@@ -947,7 +955,8 @@ export function TeamSection() {
               fontSize: "clamp(0.5rem, 0.8vw, 0.65rem)",
               fontFamily: "'Orbitron', sans-serif",
               letterSpacing: "1.5px",
-              textShadow: "0 0 20px rgba(0, 229, 255, 0.4), 0 0 40px rgba(124, 58, 237, 0.2)",
+              textShadow:
+                "0 0 20px rgba(0, 229, 255, 0.4), 0 0 40px rgba(124, 58, 237, 0.2)",
               fontWeight: 600,
             }}
           >
@@ -966,7 +975,12 @@ export function TeamSection() {
           فريق التطوير
         </h2>
         <p
-          style={{ color: COLORS.muted, fontSize: "0.85rem", marginBottom: 48, marginTop: 0 }}
+          style={{
+            color: COLORS.muted,
+            fontSize: "0.85rem",
+            marginBottom: 48,
+            marginTop: 0,
+          }}
         >
           طلاب الأمن السيبراني — جامعة ذمار
         </p>

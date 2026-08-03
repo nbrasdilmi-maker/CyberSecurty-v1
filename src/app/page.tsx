@@ -60,7 +60,7 @@ export default function HomePage() {
           }
         }
       },
-      { threshold: 0.3, rootMargin: "-80px 0px 0px 0px" }
+      { threshold: 0.3, rootMargin: "-80px 0px 0px 0px" },
     );
     navItems.forEach(({ href }) => {
       const el = document.getElementById(href.slice(1));
@@ -71,7 +71,9 @@ export default function HomePage() {
 
   const scrollTo = (href: string) => {
     setActiveSection(href);
-    document.getElementById(href.slice(1))?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById(href.slice(1))
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -85,7 +87,10 @@ export default function HomePage() {
         overflow: "hidden",
       }}
     >
-      <div className="absolute inset-0 quantum-grid z-0" style={{ pointerEvents: "none" }} />
+      <div
+        className="absolute inset-0 quantum-grid z-0"
+        style={{ pointerEvents: "none" }}
+      />
       <MatrixRain />
       <NeonParticles />
 
@@ -330,7 +335,9 @@ export default function HomePage() {
                     className="active-line"
                     style={{
                       width: isActive ? 16 : 0,
-                      boxShadow: isActive ? "0 0 8px rgba(0,229,255,0.5)" : "none",
+                      boxShadow: isActive
+                        ? "0 0 8px rgba(0,229,255,0.5)"
+                        : "none",
                     }}
                   />
                 </button>
@@ -339,10 +346,7 @@ export default function HomePage() {
           </div>
 
           {/* زر الدخول */}
-          <button
-            onClick={() => router.push("/login")}
-            className="login-btn"
-          >
+          <button onClick={() => router.push("/login")} className="login-btn">
             <LogIn size={14} strokeWidth={1.5} />
             <span className="label-desk">تسجيل الدخول</span>
             <span className="label-mob">دخول</span>
@@ -378,7 +382,8 @@ export default function HomePage() {
               letterSpacing: "0.3px",
             }}
           >
-            سحابة الأمن السيبراني © {new Date().getFullYear()} — جامعة ذمار · كلية الحاسبات
+            سحابة الأمن السيبراني © {new Date().getFullYear()} — جامعة ذمار ·
+            كلية الحاسبات
           </div>
           <div
             style={{
@@ -402,8 +407,15 @@ export default function HomePage() {
               فريق "طليعة الأمن السيبراني" | Cyber Vanguard
             </span>
             <span style={{ color: "rgba(255,255,255,0.12)" }}>·</span>
-            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "clamp(0.5rem, 0.9vw, 0.65rem)", fontWeight: 500 }}>
-              محمد إبراهيم الديلمي · أحمد الهيدمة · عبدالجليل الجبلي · أسامة شرهان · قناف العجيبي
+            <span
+              style={{
+                color: "rgba(255,255,255,0.25)",
+                fontSize: "clamp(0.5rem, 0.9vw, 0.65rem)",
+                fontWeight: 500,
+              }}
+            >
+              محمد إبراهيم الديلمي · أحمد الهيدمة · عبدالجليل الجبلي · أسامة
+              شرهان · قناف العجيبي
             </span>
           </div>
         </footer>
